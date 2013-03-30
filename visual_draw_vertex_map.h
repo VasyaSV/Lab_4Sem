@@ -3,6 +3,8 @@
 
 #include <QObject>
 
+using namespace std;
+
 class visual_draw_vertex_map : public QObject
 {
     Q_OBJECT

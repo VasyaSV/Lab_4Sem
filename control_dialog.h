@@ -3,6 +3,8 @@
 
 #include <QObject>
 
+using namespace std;
+
 class control_dialog : public QObject
 {
     Q_OBJECT

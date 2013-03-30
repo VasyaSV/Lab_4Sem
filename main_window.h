@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+using namespace std;
+
 class main_window : public QMainWindow
 {
     Q_OBJECT
