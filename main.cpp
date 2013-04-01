@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
     QPushButton mwin_temp;
     mwin_temp.show();
 
-    model_figure mdl;
-    mdl.refreash();
+    QATableFigure mdl;
+    mdl;
     return app.exec();
 }
