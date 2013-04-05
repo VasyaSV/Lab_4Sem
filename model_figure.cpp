@@ -1,7 +1,5 @@
 #include "model_figure.h"
-
-QATableFigure::QATableFigure(QObject *parent) :
-    QAbstractTableModel(parent)
+QATableFigure::QATableFigure()
 {
     header_data << QString::fromUtf8("Тип фигуры") << QString::fromUtf8("Тип основания")
                 << QString::fromUtf8("Высота") << QString::fromUtf8("координаты высоты")
@@ -11,29 +9,26 @@ QATableFigure::QATableFigure(QObject *parent) :
         list.append(it);
     }
 }
-
-QATableFigure::QATableFigure()
-{
-
-}
-
 //QString
-QString vect_to_string(point p1, point p2){
+QString QATableFigure::vect_to_string(const point p1, const point p2){
+    QString a1, a2, a3, a4, a5, a6;
+    a1.setNum(p1.x);
+    a2.setNum(p1.y);
+    a3.setNum(p1.z);
+    a4.setNum(p2.x);
+    a5.setNum(p2.y);
+    a6.setNum(p2.z);
     return QString("(%1,%2,%3), (%4,%5,%6);")
-            .arg(p1.x, p1.y,
-                 p1.z, p2.x,
-                 p2.y, p2.z);
+            .arg(a1, a2, a3, a4, a5, a6);
 }
-
-QVariant points_to_string(QList <point> lst){
+QString QATableFigure::points_to_string(QList <point> lst){
     QString str;
     QList <point>::iterator i;
     for (i = lst.begin(); i!=lst.end(); ++i)
         str+=QString("(%1,%2,%3);").arg((*i).x,(*i).y,(*i).z);
     return str;
 }
-
-QList <point> string_to_points(QString str){
+QList <point> QATableFigure::string_to_points(const QString str){
     QList <point> lst;
     int i=0;
     while (i<str.length())
@@ -57,19 +52,14 @@ QList <point> string_to_points(QString str){
     }
     return lst;
 }
-
-
-
-
 QVariant QATableFigure::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
         return QVariant();
-
+    QString tmp;
     if (index.row() >= list.size())
         return QVariant();
-    QString tmp;
-    // для каждого столбца возвращаем нужные данные
+    // for everyone column return value
     if (role == Qt::DisplayRole || role == Qt::EditRole){
         if (index.column() == 0)
             return list.at(index.row())->figure_type;
@@ -82,20 +72,31 @@ QVariant QATableFigure::data(const QModelIndex &index, int role) const
             point p1, p2;
             p1 = list.at(index.row())->point_hight_A;
             p2 = list.at(index.row())->point_hight_B;
-
-            tmp = (vect_to_string(p1, p2));
-            return tmp;
+            QString a1, a2, a3, a4, a5, a6;
+            a1.setNum(p1.x);
+            a2.setNum(p1.y);
+            a3.setNum(p1.z);
+            a4.setNum(p2.x);
+            a5.setNum(p2.y);
+            a6.setNum(p2.z);
+            return QString("(%1,%2,%3), (%4,%5,%6);")
+                    .arg(a1, a2, a3, a4, a5, a6);
         }
         if (index.column() == 4 )
-            return points_to_string(list.at(index.row())->points_base);
+        {
+            QString str;
+            QList <point>::iterator i;
+            for (i = (list.at(index.row())->points_base).begin(); i!=(list.at(index.row())->points_base).end(); ++i)
+                str+=QString("(%1,%2,%3);").arg((*i).x,(*i).y,(*i).z);
+            return str;
+        }
     }
     return QVariant();
 }
-
 bool QATableFigure::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if (index.isValid() && role == Qt::EditRole) {
-        // записываем данные из каждого столбца
+        // read value to everyone column
         if (index.column() == 0)
             list.at(index.row())->figure_type = value.toString();
         if (index.column() == 1)
@@ -113,28 +114,24 @@ bool QATableFigure::setData(const QModelIndex &index, const QVariant &value, int
     }
     return false;
 }
-
 int QATableFigure::rowCount(const QModelIndex &parent) const
 {
-    return list.size(); // размер списка - это количество строк
+    return list.size(); // list.size() = namber strings
 }
-
 int QATableFigure::columnCount(const QModelIndex &parent) const
 {
-    return 5; // 5
+    return 5; // 5 column
 }
-
 QVariant QATableFigure::headerData(int section, Qt::Orientation orientation, int role) const
 {
    if(role != Qt::DisplayRole)
            return QVariant();
    if(orientation == Qt::Horizontal && role == Qt::DisplayRole){
-       return header_data.at(section); // заголовки столбцов
+       return header_data.at(section); // header column
    }else{
-       return QString("%1").arg(section + 1); // возвращаем номера строк
+       return QString("%1").arg(section + 1); // return namber strings
    }
 }
-
 Qt::ItemFlags QATableFigure::flags(const QModelIndex &index) const
 {
    if (!index.isValid())

@@ -15,10 +15,10 @@ public:
     qint32 x;
     qint32 y;
     qint32 z;
-    point::point()
-    {
-        x=y=z=0;
-    }
+    point(){ x=y=z=0;}
+    point(const point& p){ this->x=p.x;
+                    this->y=p.y;
+                    this->z=p.z;}
 };
 
 class figure{
@@ -48,11 +48,12 @@ class QATableFigure : public QAbstractTableModel{
 Q_OBJECT
 
 public:
+QString temp;
 QList <figure*> list;
 QStringList header_data;
 
-QATableFigure(QObject *parent);
 QATableFigure();
+//QATableFigure(QObject *parent);
 
 
 bool setData(const QModelIndex &index, const QVariant &value, int role);
@@ -66,9 +67,10 @@ QVariant headerData(int section,Qt::Orientation orientation, int role=Qt::Displa
 Qt::ItemFlags flags(const QModelIndex &index) const;
 
 // String constructors
-QString vect_to_string(point p1, point p2);
-QVariant string_list_points(QList <point>);
-QList <point> string_to_points(QString);
+QString vect_to_string(const point p1, const point p2); // WTF ITS NOT WORK INLINE ONLY
+QString string_list_points(QList <point>); //  and once...
+QList <point> string_to_points(const QString);
+QString points_to_string(QList <point> lst);
 
 };
 
