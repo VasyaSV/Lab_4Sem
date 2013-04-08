@@ -5,9 +5,9 @@ using namespace std;
 
 QATableFigure::QATableFigure()
 {
-    header_data << QString::fromUtf8("Тип фигуры") << QString::fromUtf8("Тип основания")
-                << QString::fromUtf8("Высота") << QString::fromUtf8("Координаты высоты")
-                << QString::fromUtf8("Точки основания") << QString::fromUtf8("Длинны сторон основания");
+    header_data << QString("Type figure") << QString("Base type")
+                << QString("Hight") << QString("Hight posicion")
+                << QString("Base points") << QString("Long base sites");
     for(int i = 0; i < 20; i++){
         figure* it = new figure;
         list.append(it);
