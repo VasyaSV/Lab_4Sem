@@ -9,10 +9,7 @@
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    QPushButton mwin_temp;
-    mwin_temp.show();
-
-    QATableFigure mdl;
-    mdl;
+    main_window w;
+    w.show();
     return app.exec();
 }

@@ -19,28 +19,39 @@ public:
     point(const point& p){ this->x=p.x;
                     this->y=p.y;
                     this->z=p.z;}
+    point(const int x, const int y, const int z){
+        this->x=x;
+        this->y=y;
+        this->z=z;
+    }
 };
 
 class figure{
 public:
-    QList <point> points_base; // in one plane //set or part colculate
+    QList <point> points_base;   // in one plane //set or part colculate
     point point_hight_A;         // AB vertical plane point_base //set or colculate
     point point_hight_B;         // ... //set or colculate
-    // QVector <int> sites;      // colculate only
+    QList <qint32> sites;         // colculate only
     QString figure_type;         // piramid || prisme //set or colculate
     QString base_type;           // equilateral convex || unequilateral convex || unequilateral unconvex //set or colculate
     int hight;                   // >0 //set or colculate
 
     //  true if set field
-    bool f_pb;
-    bool f_A;
-    bool f_B;
-    bool f_ft;
-    bool f_bt;
-    bool f_h;
+   // bool f_pb;
+   // bool f_A;
+   // bool f_B;
+   // bool f_ft;
+   // bool f_bt;
+   // bool f_h;
 
     figure(){
-       f_h = f_bt = f_ft = f_B = f_A = f_pb = false;
+       //f_h = f_bt = f_ft = f_B = f_A = f_pb = false;
+        points_base.push_back(point());
+        hight=
+        point_hight_A.x=point_hight_A.y=point_hight_A.z=
+        point_hight_B.x=point_hight_B.y=point_hight_B.z=0;
+        figure_type=
+        base_type="";
     }
 };
 
@@ -48,13 +59,11 @@ class QATableFigure : public QAbstractTableModel{
 Q_OBJECT
 
 public:
-QString temp;
 QList <figure*> list;
 QStringList header_data;
 
 QATableFigure();
 //QATableFigure(QObject *parent);
-
 
 bool setData(const QModelIndex &index, const QVariant &value, int role);
 
@@ -69,9 +78,16 @@ Qt::ItemFlags flags(const QModelIndex &index) const;
 // String constructors
 QString vect_to_string(const point p1, const point p2); // WTF ITS NOT WORK INLINE ONLY
 QString string_list_points(QList <point>); //  and once...
-QList <point> string_to_points(const QString);
 QString points_to_string(QList <point> lst);
+QString list_int_to_string(QList <int> lst);
 
+// QList constructors
+QList <point> string_to_points(const QString);
+QList <int> string_to_list_int(const QString str);
+
+public slots:
+void read_base_from_file(QString);
+void write_base_in_file(QString);
 };
 
 

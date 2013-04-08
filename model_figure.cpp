@@ -1,9 +1,13 @@
 #include "model_figure.h"
+#include <fstream>
+
+using namespace std;
+
 QATableFigure::QATableFigure()
 {
     header_data << QString::fromUtf8("Тип фигуры") << QString::fromUtf8("Тип основания")
-                << QString::fromUtf8("Высота") << QString::fromUtf8("координаты высоты")
-                << QString::fromUtf8("Точки основания");
+                << QString::fromUtf8("Высота") << QString::fromUtf8("Координаты высоты")
+                << QString::fromUtf8("Точки основания") << QString::fromUtf8("Длинны сторон основания");
     for(int i = 0; i < 20; i++){
         figure* it = new figure;
         list.append(it);
@@ -28,11 +32,21 @@ QString QATableFigure::points_to_string(QList <point> lst){
         str+=QString("(%1,%2,%3);").arg((*i).x,(*i).y,(*i).z);
     return str;
 }
+QString QATableFigure::list_int_to_string(QList <int> lst){
+    QString str="";
+    QList <int>::iterator i;
+    for (i = lst.begin(); i!=lst.end(); ++i)
+        if (i == lst.begin())
+            str+=QString("%1").arg(*i);
+        else
+            str+=QString("-%1").arg(*i);
+    return str;
+}
 QList <point> QATableFigure::string_to_points(const QString str){
     QList <point> lst;
     int i=0;
     while (i<str.length())
-    { // format (9,9,9)
+    { // format (9,9,9)(9,9,9)(9,9,9)(9,9,9)(9,9,9)(9,9,9)...(9,9,9)
         point p;
         i++; // (
         QString tmp;
@@ -52,6 +66,22 @@ QList <point> QATableFigure::string_to_points(const QString str){
     }
     return lst;
 }
+QList <int> QATableFigure::string_to_list_int(const QString str){
+    QList <int> lst;
+    int i=0;
+    while (i<str.length())
+    { //format 9-9-9-9-9-9-9-9-9-9-9-9-9-9...9
+        int p;
+        QString tmp;
+        tmp.sprintf("%d",&str[i]);
+        p = tmp.toInt();
+        i+= tmp.length();
+        lst.push_back(p);
+        i++; // -
+    }
+    return lst;
+}
+
 QVariant QATableFigure::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
@@ -79,15 +109,28 @@ QVariant QATableFigure::data(const QModelIndex &index, int role) const
             a4.setNum(p2.x);
             a5.setNum(p2.y);
             a6.setNum(p2.z);
-            return QString("(%1,%2,%3), (%4,%5,%6);")
+            return QString("(%1,%2,%3)(%4,%5,%6) ")
                     .arg(a1, a2, a3, a4, a5, a6);
         }
         if (index.column() == 4 )
         {
-            QString str;
+            QString str("");
             QList <point>::iterator i;
             for (i = (list.at(index.row())->points_base).begin(); i!=(list.at(index.row())->points_base).end(); ++i)
-                str+=QString("(%1,%2,%3);").arg((*i).x,(*i).y,(*i).z);
+                str+=QString("(%1,%2,%3)").arg((*i).x,(*i).y,(*i).z);
+            str.push_back(" ");
+            return str;
+        }
+        if (index.column() == 5 )
+        {
+            QString str="";
+            QList <qint32>::iterator i;
+            for (i = (list.at(index.row())->sites).begin(); i!=(list.at(index.row())->sites).end(); ++i)
+                if (i == (list.at(index.row())->sites).begin())
+                    str+=QString("%1").arg(*i);
+                else
+                    str+=QString("-%1").arg(*i);
+            str+=" ";
             return str;
         }
     }
@@ -110,6 +153,8 @@ bool QATableFigure::setData(const QModelIndex &index, const QVariant &value, int
         }
         if (index.column() == 4)
             list.at(index.row())->points_base = string_to_points(value.toString());
+        if (index.column() == 5)
+            list.at(index.row())->sites = string_to_list_int(value.toString());
         return true;
     }
     return false;
@@ -138,6 +183,70 @@ Qt::ItemFlags QATableFigure::flags(const QModelIndex &index) const
         return Qt::ItemIsEnabled;
    return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
 }
+
+void QATableFigure::read_base_from_file(QString name){
+    ifstream input;
+    input.open(name.toStdString());
+    this->list.clear();
+    QList <figure*>::iterator i;
+    for (i=list.begin(); input;)
+    {
+        figure tmp;
+        input >> tmp.figure_type.toStdString();
+        input >> tmp.base_type.toStdString();
+        input >> tmp.hight;
+        QString str;
+        input >> str.toStdString();
+        tmp.point_hight_A = (string_to_points(str))[0];
+        tmp.point_hight_B = (string_to_points(str))[1];
+        input >> str.toStdString();
+        tmp.points_base = string_to_points(str);
+        input >> str.toStdString();
+        tmp.sites = string_to_list_int(str);
+        list.push_back(&tmp);
+    }
+}
+void QATableFigure::write_base_in_file(QString name){
+    ofstream out;
+    out.open(name.toStdString());
+    QList <figure*>::iterator i;
+    for (i = list.begin(); i != list.end(); ++i)
+    {
+        out << (*i)->base_type.toStdString() << " ";
+        out << (*i)->figure_type.toStdString() << " ";
+        out << (*i)->hight << " ";
+        out << "(" << (*i)->point_hight_A.x << "," << (*i)->point_hight_A.y << ")" <<
+               "(" << (*i)->point_hight_B.x << "," << (*i)->point_hight_B.y << ")" << " ";
+        point p1, p2;
+        p1 = (*i)->point_hight_A;
+        p2 = (*i)->point_hight_B;
+        QString a1, a2, a3, a4, a5, a6;
+        a1.setNum(p1.x);
+        a2.setNum(p1.y);
+        a3.setNum(p1.z);
+        a4.setNum(p2.x);
+        a5.setNum(p2.y);
+        a6.setNum(p2.z);
+        out << QString("(%1,%2,%3)(%4,%5,%6) ")
+                .arg(a1, a2, a3, a4, a5, a6).toStdString();
+        QString str("");
+        QList <point>::iterator j;
+        for (j = ((*i)->points_base).begin(); j!=(*i)->points_base.end(); ++j)
+            str+=QString("(%1,%2,%3)").arg((*j).x,(*j).y,(*j).z);
+        str+=" ";
+        out << str.toStdString();
+        str="";
+        QList <qint32>::iterator k;
+        for (k = (*i)->sites.begin(); k!=(*i)->sites.end(); ++k)
+            if (k == (*i)->sites.begin())
+                str+=QString("%1").arg(*k);
+            else
+                str+=QString("-%1").arg(*k);
+        str+="\n";
+        out << str.toStdString();
+    }
+}
+
 
 
 
