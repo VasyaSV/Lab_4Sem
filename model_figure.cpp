@@ -3,64 +3,47 @@
 
 using namespace std;
 
+const int start_size_table = 1;
+
+bool operator ==(point &p1, point &p2){
+    return p1.x==p2.x && p1.y==p2.y && p1.z==p2.z;
+}
+
 QATableFigure::QATableFigure()
 {
-    header_data << QString("Type figure") << QString("Base type")
+    header_data << QString("Figure type") << QString("Base type")
                 << QString("Hight") << QString("Hight posicion")
                 << QString("Base points") << QString("Long base sites");
-    for(int i = 0; i < 20; i++){
-        figure* it = new figure;
-        list.append(it);
-    }
+    for(int i = 0; i < start_size_table; i++)
+        list.append(new figure);
 }
-//QString
-QString QATableFigure::vect_to_string(const point p1, const point p2){
-    QString a1, a2, a3, a4, a5, a6;
-    a1.setNum(p1.x);
-    a2.setNum(p1.y);
-    a3.setNum(p1.z);
-    a4.setNum(p2.x);
-    a5.setNum(p2.y);
-    a6.setNum(p2.z);
-    return QString("(%1,%2,%3), (%4,%5,%6);")
-            .arg(a1, a2, a3, a4, a5, a6);
-}
-QString QATableFigure::points_to_string(QList <point> lst){
-    QString str;
-    QList <point>::iterator i;
-    for (i = lst.begin(); i!=lst.end(); ++i)
-        str+=QString("(%1,%2,%3);").arg((*i).x,(*i).y,(*i).z);
-    return str;
-}
-QString QATableFigure::list_int_to_string(QList <int> lst){
-    QString str="";
-    QList <int>::iterator i;
-    for (i = lst.begin(); i!=lst.end(); ++i)
-        if (i == lst.begin())
-            str+=QString("%1").arg(*i);
-        else
-            str+=QString("-%1").arg(*i);
-    return str;
-}
+
 QList <point> QATableFigure::string_to_points(const QString str){
     QList <point> lst;
-    int i=0;
+    int i=0, j;
+    QString qstmp;
     while (i<str.length())
     { // format (9,9,9)(9,9,9)(9,9,9)(9,9,9)(9,9,9)(9,9,9)...(9,9,9)
         point p;
         i++; // (
-        QString tmp;
-        tmp.sprintf("%d",&str[i]);
-        p.x = tmp.toInt();
-        i+= tmp.length();
+        char tmp[100];
+        for (j = 0; i<str.length() && i<100 && (str[i].isDigit() || str[i]=='-') ; i++, j++)
+            tmp[j]=str[i].toAscii();
+        tmp[j]=0;
+        qstmp = tmp;
+        p.x = qstmp.toInt();
         i++; // ,
-        tmp.sprintf("%d",&str[i]);
-        p.y = tmp.toInt();
-        i+= tmp.length();
+        for (j = 0; i<str.length() && i<100 && (str[i].isDigit() || str[i]=='-') ; i++, j++)
+            tmp[j]=str[i].toAscii();
+        tmp[j]=0;
+        qstmp = tmp;
+        p.y = qstmp.toInt();
         i++; // ,
-        tmp.sprintf("%d",&str[i]);
-        p.z = tmp.toInt();
-        i+= tmp.length();
+        for (j = 0; i<str.length() && i<100 && (str[i].isDigit() || str[i]=='-') ; i++, j++)
+            tmp[j]=str[i].toAscii();
+        tmp[j]=0;
+        qstmp = tmp;
+        p.z = qstmp.toInt();
         i++; // )
         lst.push_back(p);
     }
@@ -68,15 +51,16 @@ QList <point> QATableFigure::string_to_points(const QString str){
 }
 QList <int> QATableFigure::string_to_list_int(const QString str){
     QList <int> lst;
-    int i=0;
+    int i=0, j;
+    QString qstmp;
     while (i<str.length())
-    { //format 9-9-9-9-9-9-9-9-9-9-9-9-9-9...9
-        int p;
-        QString tmp;
-        tmp.sprintf("%d",&str[i]);
-        p = tmp.toInt();
-        i+= tmp.length();
-        lst.push_back(p);
+    { //format 9,9,9...9
+        char tmp[100];
+        for (j = 0; i<str.length() && i<100 && (str[i].isDigit()) ; i++, j++)
+            tmp[j]=str[i].toAscii();
+        tmp[j]=0;
+        qstmp = tmp;
+        lst.push_back(qstmp.toInt());
         i++; // -
     }
     return lst;
@@ -94,31 +78,37 @@ QVariant QATableFigure::data(const QModelIndex &index, int role) const
         if (index.column() == 0)
             return list.at(index.row())->figure_type;
         if (index.column() == 1)
+        {// NEED CALC!!
+         //   convex equilateral
+         //   convex unequilateral
+         //   unconvex
             return list.at(index.row())->base_type;
+        }
         if (index.column() == 2)
             return tmp.setNum(list.at(index.row())->hight);
         if (index.column() == 3)
-        {
-            point p1, p2;
+        {// defoult set first point base
+            point p1;
             p1 = list.at(index.row())->point_hight_A;
-            p2 = list.at(index.row())->point_hight_B;
-            QString a1, a2, a3, a4, a5, a6;
+            QString a1, a2, a3;
             a1.setNum(p1.x);
             a2.setNum(p1.y);
             a3.setNum(p1.z);
-            a4.setNum(p2.x);
-            a5.setNum(p2.y);
-            a6.setNum(p2.z);
-            return QString("(%1,%2,%3)(%4,%5,%6) ")
-                    .arg(a1, a2, a3, a4, a5, a6);
+            return QString("(%1,%2,%3)")
+                    .arg(a1, a2, a3);
         }
         if (index.column() == 4 )
         {
             QString str("");
             QList <point>::iterator i;
             for (i = (list.at(index.row())->points_base).begin(); i!=(list.at(index.row())->points_base).end(); ++i)
-                str+=QString("(%1,%2,%3)").arg((*i).x,(*i).y,(*i).z);
-            str.push_back(" ");
+            {
+               QString a1, a2, a3;
+               a1.setNum((*i).x);
+               a2.setNum((*i).y);
+               a3.setNum((*i).z);
+               str.push_back(QString("(%1,%2,%3)").arg(a1,a2,a3));
+            }
             return str;
         }
         if (index.column() == 5 )
@@ -129,7 +119,7 @@ QVariant QATableFigure::data(const QModelIndex &index, int role) const
                 if (i == (list.at(index.row())->sites).begin())
                     str+=QString("%1").arg(*i);
                 else
-                    str+=QString("-%1").arg(*i);
+                    str+=QString(",%1").arg(*i);
             str+=" ";
             return str;
         }
@@ -139,6 +129,12 @@ QVariant QATableFigure::data(const QModelIndex &index, int role) const
 bool QATableFigure::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if (index.isValid() && role == Qt::EditRole) {
+        if (index.row() == list.size()-1)
+        {
+            beginInsertRows(QModelIndex(), list.size(), list.size());
+            list.append(new figure);
+            endInsertRows();
+        }
         // read value to everyone column
         if (index.column() == 0)
             list.at(index.row())->figure_type = value.toString();
@@ -147,12 +143,26 @@ bool QATableFigure::setData(const QModelIndex &index, const QVariant &value, int
         if (index.column() == 2)
             list.at(index.row())->hight = value.toUInt();
         if (index.column() == 3)
-        {
+         // defoult set first point base
             list.at(index.row())->point_hight_A = (string_to_points(value.toString()))[0];
-            list.at(index.row())->point_hight_B = (string_to_points(value.toString()))[1];
-        }
         if (index.column() == 4)
+        {
             list.at(index.row())->points_base = string_to_points(value.toString());
+            // calculate sites
+            QList <point>::iterator i;
+            list.at(index.row())->sites.clear();
+            for (i=list.at(index.row())->points_base.begin(); i != list.at(index.row())->points_base.end(); ++i)
+            {
+                point p1, p2;
+                p1 = *i;
+                if ((*i) == *(list.at(index.row())->points_base.end()-1))
+                    p2 = list.at(index.row())->points_base.takeFirst();
+                else
+                    p2 = *(i+1);
+                int long_site = qSqrt((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y) + (p1.z-p2.z)*(p1.z-p2.z));
+                list.at(index.row())->sites.push_back(long_site);
+            }
+        }
         if (index.column() == 5)
             list.at(index.row())->sites = string_to_list_int(value.toString());
         return true;
@@ -165,7 +175,7 @@ int QATableFigure::rowCount(const QModelIndex &parent) const
 }
 int QATableFigure::columnCount(const QModelIndex &parent) const
 {
-    return 5; // 5 column
+    return 6; // 6 column
 }
 QVariant QATableFigure::headerData(int section, Qt::Orientation orientation, int role) const
 {
@@ -198,7 +208,6 @@ void QATableFigure::read_base_from_file(QString name){
         QString str;
         input >> str.toStdString();
         tmp.point_hight_A = (string_to_points(str))[0];
-        tmp.point_hight_B = (string_to_points(str))[1];
         input >> str.toStdString();
         tmp.points_base = string_to_points(str);
         input >> str.toStdString();
@@ -215,20 +224,15 @@ void QATableFigure::write_base_in_file(QString name){
         out << (*i)->base_type.toStdString() << " ";
         out << (*i)->figure_type.toStdString() << " ";
         out << (*i)->hight << " ";
-        out << "(" << (*i)->point_hight_A.x << "," << (*i)->point_hight_A.y << ")" <<
-               "(" << (*i)->point_hight_B.x << "," << (*i)->point_hight_B.y << ")" << " ";
-        point p1, p2;
+        out << "(" << (*i)->point_hight_A.x << "," << (*i)->point_hight_A.y << ")" << " ";
+        point p1;
         p1 = (*i)->point_hight_A;
-        p2 = (*i)->point_hight_B;
-        QString a1, a2, a3, a4, a5, a6;
+        QString a1, a2, a3;
         a1.setNum(p1.x);
         a2.setNum(p1.y);
         a3.setNum(p1.z);
-        a4.setNum(p2.x);
-        a5.setNum(p2.y);
-        a6.setNum(p2.z);
-        out << QString("(%1,%2,%3)(%4,%5,%6) ")
-                .arg(a1, a2, a3, a4, a5, a6).toStdString();
+        out << QString("(%1,%2,%3)")
+                .arg(a1, a2, a3).toStdString();
         QString str("");
         QList <point>::iterator j;
         for (j = ((*i)->points_base).begin(); j!=(*i)->points_base.end(); ++j)

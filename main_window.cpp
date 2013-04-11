@@ -7,8 +7,7 @@ main_window::main_window(QWidget *parent) :
     model = new QATableFigure;
     table_view->setItemDelegate(new TableDelegate);
     table_view->setModel(model);
-    //QHBoxLayout lo;
-    //lo.addWidget(table_view);
-    doooocckk.layout()->addWidget(table_view);
-    this->addDockWidget(Qt::LeftDockWidgetArea, &doooocckk);
+    dcw_table_view = new QDockWidget();
+    dcw_table_view->layout()->addWidget(table_view);
+    this->addDockWidget(Qt::LeftDockWidgetArea, dcw_table_view);
 }

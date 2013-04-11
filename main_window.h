@@ -16,7 +16,7 @@ class main_window : public QMainWindow
 public:
     QTableView* table_view;
     QATableFigure* model;
-    QDockWidget doooocckk; // xz why, but now i havan't fantasy
+    QDockWidget *dcw_table_view; // xz why, but now i havan't fantasy
     explicit main_window(QWidget *parent = 0);
     
 signals:

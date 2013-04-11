@@ -6,6 +6,8 @@
 #include <QDateTimeEdit>
 #include <QTimeEdit>
 #include <QLineEdit>
+#include <QComboBox>
+#include <QLabel>
 
 using namespace std;
 
@@ -20,16 +22,6 @@ public:
 
 
 
-class control_dialog : public QObject
-{
-    Q_OBJECT
-public:
-    explicit control_dialog(QObject *parent = 0);
-    
-signals:
-    
-public slots:
-    
-};
+
 
 #endif // CONTROL_DIALOG_H
