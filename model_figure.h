@@ -7,20 +7,26 @@
 #include <QAbstractTableModel>
 #include <QVector>
 #include <QList>
+
+const int start_size_table = 1;
+const char demention = 3; // 3D
+
 using namespace std;
 class point{
 public:
-    qint32 x;
-    qint32 y;
-    qint32 z;
-    point(){ x=y=z=0;}
-    point(const point& p){ this->x=p.x;
-                    this->y=p.y;
-                    this->z=p.z;}
+    qint32 k[demention];
+    point(){
+        for (int i=0; i<demention; i++)
+            k[i]=0;
+    }
+    point(const point& p){
+        for (int i=0; i<demention; i++)
+            k[i]=p.k[i];
+    }
     point(const int x, const int y, const int z){
-        this->x=x;
-        this->y=y;
-        this->z=z;
+        k[0]=x;
+        k[1]=y;
+        k[2]=z;
     }
     friend bool operator ==(point&, point&);
 };
@@ -29,14 +35,14 @@ class figure{
 public:
     QList <point> points_base;   // in one plane //set or part colculate
     point point_hight_A;         // AB vertical plane point_base //set or colculate
-    QList <qint32> sites;         // colculate only
+    QList <double> sites;         // colculate only
     QString figure_type;         // piramid || prisme //set or colculate
     QString base_type;           // equilateral convex || unequilateral convex || unequilateral unconvex //set or colculate
     int hight;                   // >0 //set or colculate
     figure(){
         points_base.push_back(point());
         hight=
-        point_hight_A.x=point_hight_A.y=point_hight_A.z=0;
+        point_hight_A.k[0]=point_hight_A.k[1]=point_hight_A.k[2]=0;
         figure_type=
         base_type="";
     }
@@ -64,11 +70,17 @@ Qt::ItemFlags flags(const QModelIndex &index) const;
 
 // QList constructors
 QList <point> string_to_points(const QString);
-QList <int> string_to_list_int(const QString str);
+QList <double> string_to_list_double(const QString str);
+
+// Base type
+//char sign(char p1, char p2);
+//bool in_one_plane(int num_figure);
+//bool figure_is_equilateral(const figure);
+//bool figure_is_convex(const figure);
 
 public slots:
-void read_base_from_file(QString);
-void write_base_in_file(QString);
+//void read_base_from_file(QString);
+//void write_base_in_file(QString);
 };
 
 
