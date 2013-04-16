@@ -91,3 +91,6 @@ void TableDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, con
     }
 }
 
+
+
+

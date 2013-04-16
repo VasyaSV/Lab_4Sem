@@ -20,8 +20,4 @@ public:
     void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const;
 };
 
-
-
-
-
 #endif // CONTROL_DIALOG_H
