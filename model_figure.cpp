@@ -121,6 +121,8 @@ QString QATableFigure::sites_list_to_QStr(const QModelIndex &index) const{
             str+=QString("%1").arg(*i);
         else
             str+=QString("_%1").arg(*i);
+    if (!str.length())
+        return defoult;
     str+=" ";
     return str;
 }
@@ -139,6 +141,8 @@ QString QATableFigure::points_base_to_QStr(const QModelIndex &index) const
         pstr[pstr.length()-1]=')';
         str.push_back(pstr);
     }
+    if (!str.length())
+        return defoult;
     return str;
 }
 QString QATableFigure::hight_to_QStr(figure *f) const{
@@ -160,6 +164,8 @@ QString QATableFigure::sites_list_to_QStr(figure *f) const{
             str+=QString("%1").arg(*i);
         else
             str+=QString("_%1").arg(*i);
+    if (!str.length())
+        return defoult;
     str+=" ";
     return str;
 }
@@ -178,6 +184,8 @@ QString QATableFigure::points_base_to_QStr(figure *f) const
         pstr[pstr.length()-1]=')';
         str.push_back(pstr);
     }
+    if (!str.length())
+        return defoult;
     return str;
 }
 QVariant QATableFigure::data(const QModelIndex &index, int role) const
@@ -251,13 +259,13 @@ void QATableFigure::calc_base_type(const QModelIndex &index)
            list.at(index.row())->base_type = "line";
            return;
        case 3:
-           list.at(index.row())->base_type = "right triangle";
+           list.at(index.row())->base_type = "right_triangle";
            return;
        case 4:
            list.at(index.row())->base_type = "squear";
            return;
        default:
-           type += " equilateral";
+           type += "_equilateral";
        }
    list.at(index.row())->base_type = type;
 }
@@ -351,32 +359,51 @@ Qt::ItemFlags QATableFigure::flags(const QModelIndex &index) const
 
 void QATableFigure::read_base_from_file(QString name){
     QFile file(name);
-    file.open(QIODevice::WriteOnly | QIODevice::Text);
+    figure *tmp;
+    file.open(QIODevice::ReadOnly | QIODevice::Text);
     QTextStream in(&file);
-    this->list.clear();
-    QList <figure*>::iterator i;
-    for (i=list.begin(); !in.atEnd();)
+    if (in.atEnd())
+        return;
+    //beginRemoveRows(QModelIndex(), 0, list.size()-1);
+    //for (int i=0; i<list.size(); i++)
+    //    list.removeAt(0);
+    //endRemoveRows();
+    while(!in.atEnd())
     {
-        figure *tmp=new figure;
+        tmp=new figure();
         char str[500];
+        str[0]=0;
         in >> str;
+        if (in.atEnd())
+            break;
         tmp->figure_type = str;
         in >> str;
+        if (in.atEnd())
+            break;
         tmp->base_type = str;
         in >> tmp->hight;
+        if (in.atEnd())
+            break;
         in >> str;
+        if (in.atEnd())
+            break;
         tmp->point_hight_A = (string_to_points(str))[0];
         in >> str;
+        if (in.atEnd())
+            break;
         tmp->points_base = string_to_points(str);
         in >> str;
         tmp->sites = string_to_list_double(str);
-        list.push_back(tmp);
+        beginInsertRows(QModelIndex(), list.size(), list.size());
+        list.append(tmp);
+        endInsertRows();
     }
+    delete tmp;
     file.close();
 }
 void QATableFigure::write_base_in_file(QString name){
     QFile file(name);
-    file.open(QIODevice::ReadOnly | QIODevice::Text);
+    file.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream out(&file);
     QList <figure*>::iterator i;
     for (i = list.begin(); i != list.end(); ++i)
@@ -392,12 +419,7 @@ void QATableFigure::write_base_in_file(QString name){
 }
 
 void QATableFigure::removeRow(int row, int num){
-    if (!row)
-    {
-        row++;
-        num--;
-    }
-    if (list.size() <= 1 || num < 1)
+    if (list.size() < 1 || num < 1)
         return ;
     beginRemoveRows(QModelIndex(), row, row+num-1);
     for (int i=0; i<num; i++)

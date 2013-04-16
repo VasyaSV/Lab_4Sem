@@ -13,6 +13,7 @@
 #include <QTableWidgetItem>
 #include "projection2d.h"
 const int start_size_table = 1;
+const QString defoult = "No_identified";
 
 using namespace std;
 
@@ -29,7 +30,7 @@ public:
         hight=
         point_hight_A.k[0]=point_hight_A.k[1]=point_hight_A.k[2]=0;
         figure_type=
-        base_type="";
+        base_type=defoult;
     }
 };
 
