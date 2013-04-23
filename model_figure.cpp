@@ -75,7 +75,7 @@ QList <point> QATableFigure::string_to_points(const QString str) const{
         char tmp[100];
         for (int k=0; k<demention; k++){
             for (j = 0; i<str.length() && i<100 && (str[i].isDigit() || str[i]=='-') ; i++, j++)
-                tmp[j]=str[i].toAscii();
+                tmp[j]= str[i].unicode();
             tmp[j]=0;
             qstmp = tmp;
             p.k[k] = qstmp.toInt();
@@ -93,7 +93,7 @@ QList <double> QATableFigure::string_to_list_double(const QString str) const{
     { //format 9.9_9.9_9.9...9.9
         char tmp[100];
         for (j = 0; i<str.length() && i<100 && (str[i].isDigit() || str[i]=='.') ; i++, j++)
-            tmp[j]=str[i].toAscii();
+            tmp[j]=str[i].unicode();
         tmp[j]=0;
         qstmp = tmp;
         lst.push_back(qstmp.toInt());
@@ -228,7 +228,7 @@ void QATableFigure::calc_sites(const QModelIndex &index)
         double sum_sqr_de_komponent(0); // summ squear delta komponent
         for (int k=0; k<demention; k++)
             sum_sqr_de_komponent += (p1.k[k] - p2.k[k])*(p1.k[k] - p2.k[k]);
-        double long_site = sqrt(sum_sqr_de_komponent);
+        double long_site = 0;//sqrt(sum_sqr_de_komponent);
         list.at(index.row())->sites.push_back(long_site);
     }
 }
@@ -364,10 +364,6 @@ void QATableFigure::read_base_from_file(QString name){
     QTextStream in(&file);
     if (in.atEnd())
         return;
-    //beginRemoveRows(QModelIndex(), 0, list.size()-1);
-    //for (int i=0; i<list.size(); i++)
-    //    list.removeAt(0);
-    //endRemoveRows();
     while(!in.atEnd())
     {
         tmp=new figure();
@@ -426,6 +422,12 @@ void QATableFigure::removeRow(int row, int num){
         list.removeAt(row);
     endRemoveRows();
 }
+void QATableFigure::insertRow(int row){
+    beginInsertRows(QModelIndex(), row, row);
+    list.append(new figure);
+    endInsertRows();
+}
+
 void QATableFigure::clear_cell(int row, int column){
     switch (column)
     {

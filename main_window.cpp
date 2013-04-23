@@ -6,12 +6,14 @@ main_window::main_window(QWidget *parent) :
     table_view = new QTableView;
     tdelegate = new TableDelegate;
     model = new QATableFigure;
+    scene3d = new Scene3D;
+
     this->setDockOptions(QMainWindow::VerticalTabs);
     table_view->setItemDelegate(tdelegate);
     table_view->setModel(model);
     add_menu_bar(parent);
     add_dock_widgets(parent);
-    cultivate_conects(parent);
+    cultivate_conects();
 }
 
 void main_window::add_menu_bar(QWidget *parent){
@@ -83,21 +85,30 @@ void main_window::add_dock_widgets(QWidget *parent){
     this->addDockWidget(Qt::LeftDockWidgetArea, dcw_table_view);
     dcw_3d_tool = new QDockWidget(parent);
     this->addDockWidget(Qt::RightDockWidgetArea, dcw_3d_tool);
+    dcw_3d_tool->layout()->addWidget(scene3d);
+    //scene3d->setWindowTitle("x y z");
+    //scene3d->resize(300, 300);  // размеры (nWidth, nHeight) окна
+    //scene3d->show(); // изобразить виджет
+    scene3d->showFullScreen();
+    scene3d->showMaximized();
 }
 
-void main_window::cultivate_conects(QWidget *parent){
+void main_window::cultivate_conects(){
     QObject::connect(this, SIGNAL(clear_cell(int,int)), model, SLOT(clear_cell(int,int)));
     QObject::connect(this, SIGNAL(removeRow(int,int)), model, SLOT(removeRow(int,int)));
+    QObject::connect(this, SIGNAL(insertRow(int)), model, SLOT(insertRow(int)));
     QObject::connect(this, SIGNAL(fileSave(QString)), model, SLOT(write_base_in_file(QString)));
     QObject::connect(this, SIGNAL(fileOpen(QString)), model, SLOT(read_base_from_file(QString)));
     QObject::connect(dcw_table_view, SIGNAL(visibilityChanged(bool)), this, SLOT(setVisible_table(bool)));
     QObject::connect(dcw_3d_tool, SIGNAL(visibilityChanged(bool)), this, SLOT(setVisible_3d(bool)));
+
 }
 
 void main_window::fileNew_clicked(){
     int n_rows = table_view->model()->rowCount();
     if (n_rows) // delete all raws
-        emit removeRow(table_view->rowAt(1), n_rows-1);
+        emit removeRow(table_view->rowAt(0), n_rows);
+    emit insertRow(0);
     for (int i=0; i<5 ; i++)
         emit clear_cell(0,i);
 }
@@ -127,20 +138,29 @@ void main_window::setVisible_table(bool hf){
 void main_window::keyPressEvent(QKeyEvent *ev){
     if (ev->key() == Qt::Key_Delete)
     {
-        int n_select = table_view->selectionModel()->selectedIndexes().count(),
-                first_select = table_view->selectionModel()->selectedRows().at(0).row(),
-                n_rows = table_view->model()->rowCount();
+        int n_select = table_view->selectionModel()->selectedIndexes().count();
+        int first_select;
+        if (table_view->selectionModel()->selectedRows().size())
+            first_select = table_view->selectionModel()->selectedRows().at(0).row();
+        int n_rows = table_view->model()->rowCount();
         for( int i = 0; i < n_select; i++)
             emit clear_cell(table_view->selectionModel()->selectedIndexes().at(i).row(),
-                            table_view->selectionModel()->selectedIndexes().at(i).column());      
+                            table_view->selectionModel()->selectedIndexes().at(i).column());
+
+        n_select = table_view->selectionModel()->selectedRows().count();
         if (n_select)
-            if (first_select || n_rows > 1)
+            if (first_select && n_rows != n_select)
                 emit removeRow(first_select, n_select);
-            else if (n_select > 1)
+            else if (n_rows > 1)
                 emit removeRow(table_view->selectionModel()->selectedRows().at(1).row(),
                                n_select-1);
         table_view->clearSelection();
         return;
+    }
+    if(ev->key() == Qt::Key_R)
+    {
+        qDebug("Key Space");
+        //scene3d->set_now_figure(model->list.at(0));
     }
     return;
 }

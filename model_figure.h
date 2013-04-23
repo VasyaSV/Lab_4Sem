@@ -11,28 +11,12 @@
 #include <QTextStream>
 #include <QTableView>
 #include <QTableWidgetItem>
+#include <QVariant>
 #include "projection2d.h"
+#include "figure.h"
 const int start_size_table = 1;
-const QString defoult = "No_identified";
 
 using namespace std;
-
-class figure{
-public:
-    QList <point> points_base;   // in one plane //set or part colculate
-    point point_hight_A;         // AB vertical plane point_base //set or colculate
-    QList <double> sites;         // colculate only
-    QString figure_type;         // piramid || prisme //set or colculate
-    QString base_type;           // equilateral convex || unequilateral convex || unequilateral unconvex //set or colculate
-    int hight;                   // >0 //set or colculate
-    figure(){
-        points_base.push_back(point());
-        hight=
-        point_hight_A.k[0]=point_hight_A.k[1]=point_hight_A.k[2]=0;
-        figure_type=
-        base_type=defoult;
-    }
-};
 
 class QATableFigure : public QAbstractTableModel{
 Q_OBJECT
@@ -78,10 +62,11 @@ QString points_base_to_QStr(figure*) const;
 QString hight_to_QStr(figure*) const;
 
 public slots:
+void insertRow(int row);
+void removeRow(int row, int num);
 void read_base_from_file(QString);
 void write_base_in_file(QString);
 void clear_cell(int row, int column);
-void removeRow(int row, int num);
 };
 
 #endif // MODEL_FIGURE_H

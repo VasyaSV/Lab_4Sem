@@ -14,6 +14,7 @@
 #include <QFileDialog>
 #include "model_figure.h"
 #include "control_dialog.h"
+#include "view_3d.h"
 
 using namespace std;
 
@@ -24,7 +25,7 @@ public:
     QTableView* table_view;
     TableDelegate *tdelegate;
     QATableFigure* model;
-    QDockWidget *dcw_table_view; // xz why, but now i havan't fantasy
+    QDockWidget *dcw_table_view;
     QDockWidget *dcw_3d_tool;
     QMenuBar *menu_bar;
     QAction *file_new;
@@ -34,6 +35,9 @@ public:
     QAction *about;
     QAction *table;
     QAction *window_3d;
+
+    Scene3D *scene3d; // создаём виджет класса Scene3D
+    //view_3d *v3d;
     //QAction *delete_row;
     //QAction *add_row;
     //QAction *up_row;
@@ -44,7 +48,7 @@ public:
 
     void add_menu_bar(QWidget *parent);
     void add_dock_widgets(QWidget *parent);
-    void cultivate_conects(QWidget *parent);
+    void cultivate_conects();
 
     main_window(QWidget *parent = 0);
     bool del_cliced(QEvent*);
@@ -55,6 +59,7 @@ signals:
     void del_pressed();
     void fileSave(QString);
     void fileOpen(QString);
+    void insertRow(int);
 public slots:
     void fileSave_clicked();
     void fileOpen_clicked();

@@ -2,6 +2,8 @@
 #define CONTROL_DIALOG_H
 
 #include <QObject>
+#include <QtGui>
+#include <QtCore>
 #include <QItemDelegate>
 #include <QDateTimeEdit>
 #include <QTimeEdit>
