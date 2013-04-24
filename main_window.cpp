@@ -7,7 +7,8 @@ main_window::main_window(QWidget *parent) :
     tdelegate = new TableDelegate;
     model = new QATableFigure;
     scene3d = new Scene3D;
-
+    file_dialog = new QFileDialog;
+    file_dialog->setNameFilter("Figure file\'s (*.fgr)");
     this->setDockOptions(QMainWindow::VerticalTabs);
     table_view->setItemDelegate(tdelegate);
     table_view->setModel(model);
@@ -17,6 +18,16 @@ main_window::main_window(QWidget *parent) :
 }
 
 void main_window::add_menu_bar(QWidget *parent){
+    QAction *file_new;
+    QAction *file_open;
+    QAction *file_save;
+    QAction *quit;
+    QAction *about;
+    QAction *table;
+    QAction *window_3d;
+    QAction *a_add_after;
+    QAction *a_add_before;
+    QAction *a_add_down;
     menu_bar = new QMenuBar;
     this->setMenuBar(menu_bar);
     QMenu *tmp = new QMenu;
@@ -50,24 +61,42 @@ void main_window::add_menu_bar(QWidget *parent){
     tmp->addSeparator();
     tmp->addAction(quit);
 
+    QMenu *tmp3 = new QMenu;
+    tmp3->setTitle("Edit");
+    menu_bar->addMenu(tmp3);
+
+    a_add_after = new QAction(parent);
+    a_add_before = new QAction(parent);
+    a_add_down = new QAction(parent);
+    a_add_after->setShortcut(tr("Ctrl+A"));
+    a_add_before->setShortcut(tr("Shift+A"));
+    a_add_down->setShortcut(tr("Shift+D"));
+    a_add_after->setText("Add after");
+    a_add_before->setText("Add before");
+    a_add_down->setText("Add down");
+    tmp3->addAction(a_add_after);
+    tmp3->addAction(a_add_before);
+    tmp3->addAction(a_add_down);
+    QObject::connect(a_add_after, SIGNAL(activated()), this, SLOT(add_after()));
+    QObject::connect(a_add_before, SIGNAL(activated()), this, SLOT(add_before()));
+    QObject::connect(a_add_down, SIGNAL(activated()), this, SLOT(add_end()));
+
     QMenu *tmp2 = new QMenu;
+    tmp2->setTitle("Window");
     menu_bar->addMenu(tmp2);
 
     table = new QAction(parent);
     table->setShortcut(tr("Shift+T"));
-   // QObject::connect(table, SIGNAL(activated()), this, SLOT(show_table()));
     table->setCheckable(true);
     table->toggle();
     QObject::connect(table, SIGNAL(toggled(bool)), this, SLOT(setVisible_table(bool)));
 
     window_3d = new QAction(parent);
     window_3d->setShortcut(tr("Shift+D"));
-    //QObject::connect(window_3d, SIGNAL(activated()), this, SLOT(show_3dtool()));
     window_3d->setCheckable(true);
     window_3d->toggle();
     QObject::connect(window_3d, SIGNAL(toggled(bool)), this, SLOT(setVisible_3d(bool)));
 
-    tmp2->setTitle("window");
     table->setText("Table view");
     window_3d->setText("3D Tool");
 
@@ -77,6 +106,7 @@ void main_window::add_menu_bar(QWidget *parent){
     about = new QAction(parent);
     about->setText("About");
     menu_bar->addAction(about);
+    QObject::connect(about, SIGNAL(activated()), this, SLOT(about_clicked()));
 }
 
 void main_window::add_dock_widgets(QWidget *parent){
@@ -101,7 +131,36 @@ void main_window::cultivate_conects(){
     QObject::connect(this, SIGNAL(fileOpen(QString)), model, SLOT(read_base_from_file(QString)));
     QObject::connect(dcw_table_view, SIGNAL(visibilityChanged(bool)), this, SLOT(setVisible_table(bool)));
     QObject::connect(dcw_3d_tool, SIGNAL(visibilityChanged(bool)), this, SLOT(setVisible_3d(bool)));
+    QObject::connect(this, SIGNAL(sql(bool)), model, SLOT(sql(bool)));
 
+    QObject::connect(table_view->selectionModel(),SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+                SLOT(tableSelectionChanged()));
+}
+
+void main_window::tableSelectionChanged()
+{
+    if (table_view->selectionModel()->selectedIndexes().count())
+        scene3d->set_figure(model->list.at(
+                               table_view->selectionModel()->selectedIndexes().at(0).row()));
+}
+
+void main_window::about_clicked(){
+   // QDebug << ("WHOT ABOUT!???");
+}
+
+void main_window::add_after(){
+    if (table_view->selectionModel()->selectedIndexes().count())
+        model->insertRow(table_view->selectionModel()->selectedIndexes().at(0).row()+1);
+}
+
+void main_window::add_before(){
+    if (table_view->selectionModel()->selectedIndexes().count())
+        model->insertRow(table_view->selectionModel()->selectedIndexes().at(0).row());
+}
+
+void main_window::add_end(){
+    if (table_view->selectionModel()->selectedIndexes().count())
+        model->insertRow(table_view->model()->rowCount());
 }
 
 void main_window::fileNew_clicked(){
@@ -114,11 +173,11 @@ void main_window::fileNew_clicked(){
 }
 
 void main_window::fileSave_clicked(){
-    emit fileSave(QFileDialog::getSaveFileName());
+    emit fileSave(file_dialog->getSaveFileName());
 }
 void main_window::fileOpen_clicked(){
     table_view->clearSelection();
-    QString name = QFileDialog::getOpenFileName();
+    QString name = file_dialog->getOpenFileName();
     if (name.length()==0)
         return;
     int n = table_view->model()->rowCount();

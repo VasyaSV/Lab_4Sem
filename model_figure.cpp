@@ -2,8 +2,35 @@
 
 using namespace std;
 
+void  QATableFigure::set_sql_name(QString name){
+    sql_name = name;
+}
+
+void QATableFigure::sql(bool f){
+    f_sql = f;
+    if (!f)
+        return;
+    data_base.setDatabaseName(sql_name);
+    if (!data_base.open()) {
+            qDebug() << "Not open SQlite";
+            return;
+        }
+    if (!a_query.exec("CREATE TABLE figures ("
+                      "figure_type VARCHAR(255), "
+                      "base_type VARCHAR(255), "
+                      "hight integer,"
+                      "hight_point VARCHAR(255), "
+                      "base_points VARCHAR(255)"
+                      ");")) {
+        qDebug() << "Not exec table";
+    }
+
+}
+
 QATableFigure::QATableFigure()
 {
+    data_base = QSqlDatabase::addDatabase("QSQLITE");
+    sql_name = DEFOULT_SQL_OUT;
     header_data << QString("Figure type") << QString("Base type")
                 << QString("Hight") << QString("Hight posicion")
                 << QString("Base points") << QString("Long base sites");
@@ -123,7 +150,6 @@ QString QATableFigure::sites_list_to_QStr(const QModelIndex &index) const{
             str+=QString("_%1").arg(*i);
     if (!str.length())
         return defoult;
-    str+=" ";
     return str;
 }
 QString QATableFigure::points_base_to_QStr(const QModelIndex &index) const
@@ -166,7 +192,6 @@ QString QATableFigure::sites_list_to_QStr(figure *f) const{
             str+=QString("_%1").arg(*i);
     if (!str.length())
         return defoult;
-    str+=" ";
     return str;
 }
 QString QATableFigure::points_base_to_QStr(figure *f) const
@@ -372,23 +397,35 @@ void QATableFigure::read_base_from_file(QString name){
         in >> str;
         if (in.atEnd())
             break;
+        str[strlen(str)-1]=0;
+        if (in.atEnd())
+            break;
         tmp->figure_type = str;
         in >> str;
+        if (in.atEnd())
+            break;
+        str[strlen(str)-1]=0;
         if (in.atEnd())
             break;
         tmp->base_type = str;
         in >> tmp->hight;
         if (in.atEnd())
             break;
+        in >> str; // _
+        if (in.atEnd())
+            break;
         in >> str;
+        str[strlen(str)-1]=0;
         if (in.atEnd())
             break;
         tmp->point_hight_A = (string_to_points(str))[0];
         in >> str;
+        str[strlen(str)-1]=0;
         if (in.atEnd())
             break;
         tmp->points_base = string_to_points(str);
         in >> str;
+        str[strlen(str)-1]=0;
         tmp->sites = string_to_list_double(str);
         beginInsertRows(QModelIndex(), list.size(), list.size());
         list.append(tmp);
@@ -404,12 +441,12 @@ void QATableFigure::write_base_in_file(QString name){
     QList <figure*>::iterator i;
     for (i = list.begin(); i != list.end(); ++i)
     {
-        out << (*i)->figure_type << " ";
-        out << (*i)->base_type << " ";
-        out << (*i)->hight << " ";
-        out << hight_to_QStr(*i) << " ";
-        out << points_base_to_QStr(*i) << " ";
-        out << sites_list_to_QStr(*i) << " \n";
+        out << (*i)->figure_type << "_ ";
+        out << (*i)->base_type << "_ ";
+        out << (*i)->hight << "_ ";
+        out << hight_to_QStr(*i) << "_ ";
+        out << points_base_to_QStr(*i) << "_ ";
+        out << sites_list_to_QStr(*i) << "_ \n";
     }
     file.close();
 }
@@ -424,7 +461,7 @@ void QATableFigure::removeRow(int row, int num){
 }
 void QATableFigure::insertRow(int row){
     beginInsertRows(QModelIndex(), row, row);
-    list.append(new figure);
+    list.insert(row, new figure);
     endInsertRows();
 }
 

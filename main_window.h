@@ -15,6 +15,7 @@
 #include "model_figure.h"
 #include "control_dialog.h"
 #include "view_3d.h"
+#include "Constants.h"
 
 using namespace std;
 
@@ -28,13 +29,7 @@ public:
     QDockWidget *dcw_table_view;
     QDockWidget *dcw_3d_tool;
     QMenuBar *menu_bar;
-    QAction *file_new;
-    QAction *file_open;
-    QAction *file_save;
-    QAction *quit;
-    QAction *about;
-    QAction *table;
-    QAction *window_3d;
+    QFileDialog *file_dialog;
 
     Scene3D *scene3d; // создаём виджет класса Scene3D
     //view_3d *v3d;
@@ -54,6 +49,7 @@ public:
     bool del_cliced(QEvent*);
     void keyPressEvent(QKeyEvent *ev);
 signals:
+    void sql(bool);
     void clear_cell(int row, int column);
     void removeRow(int row, int num);
     void del_pressed();
@@ -61,11 +57,16 @@ signals:
     void fileOpen(QString);
     void insertRow(int);
 public slots:
+    void tableSelectionChanged();
     void fileSave_clicked();
     void fileOpen_clicked();
     void fileNew_clicked();
+    void about_clicked();
     void setVisible_3d(bool);
     void setVisible_table(bool);
+    void add_after();
+    void add_before();
+    void add_end();
 };
 
 #endif // MAIN_WINDOW_H

@@ -12,9 +12,10 @@
 #include <QTableView>
 #include <QTableWidgetItem>
 #include <QVariant>
+#include <QtSql/QtSql>
 #include "projection2d.h"
 #include "figure.h"
-const int start_size_table = 1;
+#include "Constants.h"
 
 using namespace std;
 
@@ -22,12 +23,17 @@ class QATableFigure : public QAbstractTableModel{
 Q_OBJECT
 
 public:
+bool f_sql;// sinhronize with sqlite base
+QSqlDatabase data_base;
+QSqlQuery a_query;
+QString sql_name;
+
 QList <figure*> list;
 QStringList header_data;
 
 QATableFigure();
 //QATableFigure(QObject *parent);
-
+// +=проверку на звезду
 bool setData(const QModelIndex &index, const QVariant &value, int role);
 
 QVariant data(const QModelIndex &index, int role) const;
@@ -62,6 +68,8 @@ QString points_base_to_QStr(figure*) const;
 QString hight_to_QStr(figure*) const;
 
 public slots:
+void sql(bool);
+void set_sql_name(QString);
 void insertRow(int row);
 void removeRow(int row, int num);
 void read_base_from_file(QString);
