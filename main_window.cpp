@@ -8,13 +8,15 @@ main_window::main_window(QWidget *parent) :
     model = new QATableFigure;
     scene3d = new Scene3D;
     file_dialog = new QFileDialog;
-    file_dialog->setNameFilter("Figure file\'s (*.fgr)");
     this->setDockOptions(QMainWindow::VerticalTabs);
+    add_dock_widgets(parent);
     table_view->setItemDelegate(tdelegate);
     table_view->setModel(model);
     add_menu_bar(parent);
-    add_dock_widgets(parent);
     cultivate_conects();
+    table_view->setAcceptDrops(false);
+    this->setAcceptDrops(true);
+    scene3d->resize(300,300);
 }
 
 void main_window::add_menu_bar(QWidget *parent){
@@ -28,11 +30,16 @@ void main_window::add_menu_bar(QWidget *parent){
     QAction *a_add_after;
     QAction *a_add_before;
     QAction *a_add_down;
+    //QAction *down_row;
+    //QAction *copy
+    //QAction *paste
+    //QAction *i_dont_know_what_all_else_matters
+
     menu_bar = new QMenuBar;
     this->setMenuBar(menu_bar);
-    QMenu *tmp = new QMenu;
-    tmp->setTitle("File");
-    menu_bar->addMenu(tmp);
+    QMenu *memu_file = new QMenu;
+    memu_file->setTitle("File");
+    menu_bar->addMenu(memu_file);
 
     file_new = new QAction(parent);
     file_new->setShortcut(tr("Ctrl+N"));
@@ -55,35 +62,39 @@ void main_window::add_menu_bar(QWidget *parent){
     file_save->setText("Save");
     quit->setText("Exit");
 
-    tmp->addAction(file_new);
-    tmp->addAction(file_open);
-    tmp->addAction(file_save);
-    tmp->addSeparator();
-    tmp->addAction(quit);
+    memu_file->addAction(file_new);
+    memu_file->addAction(file_open);
+    memu_file->addAction(file_save);
+    memu_file->addSeparator();
+    memu_file->addAction(quit);
 
-    QMenu *tmp3 = new QMenu;
-    tmp3->setTitle("Edit");
-    menu_bar->addMenu(tmp3);
+    QMenu *memu_edit = new QMenu;
+    memu_edit->setTitle("Edit");
+    menu_bar->addMenu(memu_edit);
 
     a_add_after = new QAction(parent);
-    a_add_before = new QAction(parent);
-    a_add_down = new QAction(parent);
     a_add_after->setShortcut(tr("Ctrl+A"));
+
+    a_add_before = new QAction(parent);
     a_add_before->setShortcut(tr("Shift+A"));
-    a_add_down->setShortcut(tr("Shift+D"));
+
+    a_add_down = new QAction(parent);
+    a_add_down->setShortcut(tr("Ctrl+D"));
+
     a_add_after->setText("Add after");
     a_add_before->setText("Add before");
     a_add_down->setText("Add down");
-    tmp3->addAction(a_add_after);
-    tmp3->addAction(a_add_before);
-    tmp3->addAction(a_add_down);
+
+    memu_edit->addAction(a_add_after);
+    memu_edit->addAction(a_add_before);
+    memu_edit->addAction(a_add_down);
     QObject::connect(a_add_after, SIGNAL(activated()), this, SLOT(add_after()));
     QObject::connect(a_add_before, SIGNAL(activated()), this, SLOT(add_before()));
     QObject::connect(a_add_down, SIGNAL(activated()), this, SLOT(add_end()));
 
-    QMenu *tmp2 = new QMenu;
-    tmp2->setTitle("Window");
-    menu_bar->addMenu(tmp2);
+    QMenu *memu_window = new QMenu;
+    memu_window->setTitle("Window");
+    menu_bar->addMenu(memu_window);
 
     table = new QAction(parent);
     table->setShortcut(tr("Shift+T"));
@@ -100,8 +111,8 @@ void main_window::add_menu_bar(QWidget *parent){
     table->setText("Table view");
     window_3d->setText("3D Tool");
 
-    tmp2->addAction(table);
-    tmp2->addAction(window_3d);
+    memu_window->addAction(table);
+    memu_window->addAction(window_3d);
 
     about = new QAction(parent);
     about->setText("About");
@@ -116,9 +127,6 @@ void main_window::add_dock_widgets(QWidget *parent){
     dcw_3d_tool = new QDockWidget(parent);
     this->addDockWidget(Qt::RightDockWidgetArea, dcw_3d_tool);
     dcw_3d_tool->layout()->addWidget(scene3d);
-    //scene3d->setWindowTitle("x y z");
-    //scene3d->resize(300, 300);  // размеры (nWidth, nHeight) окна
-    //scene3d->show(); // изобразить виджет
     scene3d->showFullScreen();
     scene3d->showMaximized();
 }
@@ -132,7 +140,7 @@ void main_window::cultivate_conects(){
     QObject::connect(dcw_table_view, SIGNAL(visibilityChanged(bool)), this, SLOT(setVisible_table(bool)));
     QObject::connect(dcw_3d_tool, SIGNAL(visibilityChanged(bool)), this, SLOT(setVisible_3d(bool)));
     QObject::connect(this, SIGNAL(sql(bool)), model, SLOT(sql(bool)));
-
+    QObject::connect(this, SIGNAL(recolculat_model()), model, SLOT(refreash()));
     QObject::connect(table_view->selectionModel(),SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
                 SLOT(tableSelectionChanged()));
 }
@@ -145,7 +153,7 @@ void main_window::tableSelectionChanged()
 }
 
 void main_window::about_clicked(){
-   // QDebug << ("WHOT ABOUT!???");
+   qDebug("WHOT ABOUT!???");
 }
 
 void main_window::add_after(){
@@ -178,12 +186,13 @@ void main_window::fileSave_clicked(){
 void main_window::fileOpen_clicked(){
     table_view->clearSelection();
     QString name = file_dialog->getOpenFileName();
-    if (name.length()==0)
+    if (name.isEmpty())
         return;
     int n = table_view->model()->rowCount();
     if (n) // delete all raws
         emit removeRow(table_view->rowAt(0), n);
     emit fileOpen(name);
+    emit recolculat_model();
 }
 
 void main_window::setVisible_3d(bool hf){
@@ -199,27 +208,55 @@ void main_window::keyPressEvent(QKeyEvent *ev){
     {
         int n_select = table_view->selectionModel()->selectedIndexes().count();
         int first_select;
-        if (table_view->selectionModel()->selectedRows().size())
+        if (!table_view->selectionModel()->selectedRows().isEmpty())
             first_select = table_view->selectionModel()->selectedRows().at(0).row();
         int n_rows = table_view->model()->rowCount();
         for( int i = 0; i < n_select; i++)
             emit clear_cell(table_view->selectionModel()->selectedIndexes().at(i).row(),
                             table_view->selectionModel()->selectedIndexes().at(i).column());
 
-        n_select = table_view->selectionModel()->selectedRows().count();
-        if (n_select)
-            if (first_select && n_rows != n_select)
-                emit removeRow(first_select, n_select);
+        int count_select = table_view->selectionModel()->selectedRows().count();
+        if (count_select)
+            if (first_select || n_rows > count_select)
+                emit removeRow(first_select, count_select);
             else if (n_rows > 1)
-                emit removeRow(table_view->selectionModel()->selectedRows().at(1).row(),
-                               n_select-1);
+                if (count_select > 1)
+                   emit removeRow(table_view->selectionModel()->selectedRows().at(1).row(),
+                        count_select-1);
+                else
+                    emit removeRow(table_view->selectionModel()->selectedRows().at(0).row(),
+                                1);
+
         table_view->clearSelection();
         return;
     }
-    if(ev->key() == Qt::Key_R)
-    {
-        qDebug("Key Space");
-        //scene3d->set_now_figure(model->list.at(0));
-    }
     return;
 }
+
+void main_window::dropEvent(QDropEvent *ev){
+    if (ev->mimeData()->urls().empty())
+        return;
+    QString fileName = ev->mimeData()->urls().first().toLocalFile();
+    if (fileName.isEmpty())
+        return;
+    table_view->clearSelection();
+    int n = table_view->model()->rowCount();
+    if (n) // delete all raws
+        emit removeRow(table_view->rowAt(0), n);
+    emit fileOpen(fileName);
+}
+
+void main_window::dragEnterEvent(QDragEnterEvent *ev){
+   if (ev->mimeData()->hasFormat("text/uri-list"))
+       ev->acceptProposedAction();
+}
+
+
+
+
+
+
+
+
+
+

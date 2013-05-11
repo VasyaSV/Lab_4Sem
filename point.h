@@ -4,7 +4,7 @@
 #include "Constants.h"
 class point{
 public:
-    int k[demention];
+    float k[demention];
     point();
     point(const point& p);
     point(const int x, const int y, const int z);

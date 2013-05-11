@@ -27,6 +27,23 @@ void QATableFigure::sql(bool f){
 
 }
 
+void QATableFigure::refreash(){
+    QList <figure *>::iterator i;
+    for (i=list.begin(); i!=list.end() ;i++)
+    {
+        calc_base_type(*i);
+        point p;
+        p = (*i)->point_hight_A;
+        if ((*i)->points_base.size()>2){
+            QList <point>::iterator j;
+            j=(*i)->points_base.begin();
+            if (!point_in_one_plane(*(j), *(j+1), *(j+2), p)) // defoult set first point base
+                p  = *j;
+        }
+        (*i)->point_hight_A = p;
+        calc_sites(*i);
+    }
+}
 QATableFigure::QATableFigure()
 {
     data_base = QSqlDatabase::addDatabase("QSQLITE");
@@ -253,7 +270,7 @@ void QATableFigure::calc_sites(const QModelIndex &index)
         double sum_sqr_de_komponent(0); // summ squear delta komponent
         for (int k=0; k<demention; k++)
             sum_sqr_de_komponent += (p1.k[k] - p2.k[k])*(p1.k[k] - p2.k[k]);
-        double long_site = 0;//sqrt(sum_sqr_de_komponent);
+        double long_site = sqrt(sum_sqr_de_komponent);
         list.at(index.row())->sites.push_back(long_site);
     }
 }
@@ -294,6 +311,67 @@ void QATableFigure::calc_base_type(const QModelIndex &index)
        }
    list.at(index.row())->base_type = type;
 }
+
+
+void QATableFigure::calc_sites(figure* f)
+{
+    QList <point>::iterator i; // calculate length site
+    f->sites.clear();
+    for (i=f->points_base.begin(); i != f->points_base.end(); ++i)
+    {
+        point p1, p2;
+        p1 = *i;
+        if ((*i) == *(f->points_base.end()-1))
+            p2 = f->points_base.at(0);
+        else
+            p2 = *(i+1);
+
+        double sum_sqr_de_komponent(0); // summ squear delta komponent
+        for (int k=0; k<demention; k++)
+            sum_sqr_de_komponent += (p1.k[k] - p2.k[k])*(p1.k[k] - p2.k[k]);
+        double long_site = sqrt(sum_sqr_de_komponent);
+        f->sites.push_back(long_site);
+    }
+}
+void QATableFigure::calc_base_type(figure* f)
+{
+    //   convex equilateral
+    //   convex
+    //   unconvex
+   QString type("");
+   if (!point_in_one_plane(f->points_base) || f->points_base.size()<1)
+   {
+       f->base_type = "incorect";
+       return;
+   }
+   if (!figure_is_convex(f->points_base))
+   {
+       f->base_type = "unconvex";
+       return;
+   }
+   type = "convex";
+   if (figure_is_equilateral(f->sites))
+       switch (f->points_base.size())
+       {
+       case 1:
+           f->base_type = "point";
+           return;
+       case 2:
+           f->base_type = "line";
+           return;
+       case 3:
+           f->base_type = "right_triangle";
+           return;
+       case 4:
+           f->base_type = "squear";
+           return;
+       default:
+           type += "_equilateral";
+       }
+   f->base_type = type;
+}
+
+
 bool QATableFigure::point_in_one_plane(point p1, point p2, point p3, point p) // p in plane (p1,p2,p3)?
 {
     int x1, x2, x3, y1, y2, y3, z1, z2, z3, x, y, z;
@@ -333,26 +411,12 @@ bool QATableFigure::setData(const QModelIndex &index, const QVariant &value, int
         if (index.column() == 2)
             list.at(index.row())->hight = value.toUInt();
         if (index.column() == 3)
-        {
-            point p;
-            p = (string_to_points(value.toString()))[0];
-            if (list.at(index.row())->points_base.size()>2){
-                QList <point>::iterator i;
-                i=list.at(index.row())->points_base.begin();
-                if (!point_in_one_plane(*(i), *(i+1), *(i+2), p)) // defoult set first point base
-                    p  = *i;
-            }
-            list.at(index.row())->point_hight_A = p;
-            return true;
-        }
+            list.at(index.row())->point_hight_A = (string_to_points(value.toString()))[0];
         if (index.column() == 4)
-        {
             list.at(index.row())->points_base = string_to_points(value.toString());
-            calc_sites(index);
-            calc_base_type(index);
-        }
         if (index.column() == 5)
             list.at(index.row())->sites = string_to_list_double(value.toString());
+        refreash();
         return true;
     }
     return false;
@@ -383,6 +447,7 @@ Qt::ItemFlags QATableFigure::flags(const QModelIndex &index) const
 }
 
 void QATableFigure::read_base_from_file(QString name){
+    qDebug("%s",name.toStdString());
     QFile file(name);
     figure *tmp;
     file.open(QIODevice::ReadOnly | QIODevice::Text);
@@ -401,13 +466,11 @@ void QATableFigure::read_base_from_file(QString name){
         if (in.atEnd())
             break;
         tmp->figure_type = str;
-        in >> str;
-        if (in.atEnd())
-            break;
-        str[strlen(str)-1]=0;
-        if (in.atEnd())
-            break;
-        tmp->base_type = str;
+//        in >> str;
+//        if (in.atEnd())
+//            break;
+//        str[strlen(str)-1]=0;
+//        tmp->base_type = str;
         in >> tmp->hight;
         if (in.atEnd())
             break;
@@ -415,18 +478,20 @@ void QATableFigure::read_base_from_file(QString name){
         if (in.atEnd())
             break;
         in >> str;
-        str[strlen(str)-1]=0;
         if (in.atEnd())
             break;
+        str[strlen(str)-1]=0;
         tmp->point_hight_A = (string_to_points(str))[0];
         in >> str;
         str[strlen(str)-1]=0;
         if (in.atEnd())
             break;
         tmp->points_base = string_to_points(str);
-        in >> str;
-        str[strlen(str)-1]=0;
-        tmp->sites = string_to_list_double(str);
+//        in >> str;
+//        if (in.atEnd())
+//            break;
+//        str[strlen(str)-1]=0;
+//        tmp->sites = string_to_list_double(str);
         beginInsertRows(QModelIndex(), list.size(), list.size());
         list.append(tmp);
         endInsertRows();
@@ -442,11 +507,11 @@ void QATableFigure::write_base_in_file(QString name){
     for (i = list.begin(); i != list.end(); ++i)
     {
         out << (*i)->figure_type << "_ ";
-        out << (*i)->base_type << "_ ";
+        //out << (*i)->base_type << "_ ";
         out << (*i)->hight << "_ ";
         out << hight_to_QStr(*i) << "_ ";
         out << points_base_to_QStr(*i) << "_ ";
-        out << sites_list_to_QStr(*i) << "_ \n";
+        //out << sites_list_to_QStr(*i) << "_ \n";
     }
     file.close();
 }

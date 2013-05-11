@@ -52,7 +52,9 @@ QList <double> string_to_list_double(const QString str) const;
 //   convex
 //   unconvex
 void calc_sites(const QModelIndex&);
+void calc_sites(figure*);
 void calc_base_type(const QModelIndex&);
+void calc_base_type(figure*);
 
 bool point_in_one_plane(point p1, point p2, point p3, point p);
 bool point_in_one_plane(const QList <point>);
@@ -67,10 +69,12 @@ QString sites_list_to_QStr(figure*) const;
 QString points_base_to_QStr(figure*) const;
 QString hight_to_QStr(figure*) const;
 
+
 public slots:
 void sql(bool);
 void set_sql_name(QString);
 void insertRow(int row);
+void refreash();
 void removeRow(int row, int num);
 void read_base_from_file(QString);
 void write_base_in_file(QString);

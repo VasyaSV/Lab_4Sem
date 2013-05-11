@@ -12,6 +12,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QFileDialog>
+#include <QDrag>
 #include "model_figure.h"
 #include "control_dialog.h"
 #include "view_3d.h"
@@ -30,16 +31,7 @@ public:
     QDockWidget *dcw_3d_tool;
     QMenuBar *menu_bar;
     QFileDialog *file_dialog;
-
     Scene3D *scene3d; // создаём виджет класса Scene3D
-    //view_3d *v3d;
-    //QAction *delete_row;
-    //QAction *add_row;
-    //QAction *up_row;
-    //QAction *down_row;
-    //QAction *copy
-    //QAction *paste
-    //QAction *i_dont_know_what_all_else_matters
 
     void add_menu_bar(QWidget *parent);
     void add_dock_widgets(QWidget *parent);
@@ -48,8 +40,12 @@ public:
     main_window(QWidget *parent = 0);
     bool del_cliced(QEvent*);
     void keyPressEvent(QKeyEvent *ev);
+    void dragEnterEvent(QDragEnterEvent *ev);
+    //void dragMoveEvent(QDragMoveEvent *ev);
+    void dropEvent(QDropEvent *ev);
 signals:
     void sql(bool);
+    void recolculat_model();
     void clear_cell(int row, int column);
     void removeRow(int row, int num);
     void del_pressed();

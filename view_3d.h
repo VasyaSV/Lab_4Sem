@@ -1,22 +1,23 @@
 #ifndef SCENE3D_H
 #define SCENE3D_H
 
-#include <QGLWidget> // подключаем класс QGLWidget
+#include <QGLWidget>
 #include <QtOpenGL>
 #include <QEvent>
-#include <math.h>     // подключаем математическую библиотеку
+#include <math.h>
 #include "figure.h"
 #include "Constants.h"
 
-class Scene3D : public QGLWidget // класс Scene3D наследует встроенный класс QGLWidget
+class Scene3D : public QGLWidget
 {
     Q_OBJECT
-   private:
     GLfloat VertexArray[60][3]; // декларируем массив вершин
     GLfloat ColorArray[60][3];  // декларируем массив цветов вершин
     GLubyte IndexArray[300][3];  // декларируем массив индексов вершин
       figure *cur_figure;
       point h;
+      QColor back_grount_color;
+
       GLfloat xRot; // переменная хранит угол поворота вокруг оси X
       GLfloat yRot; // переменная хранит угол поворота вокруг оси Y
       GLfloat zRot; // переменная хранит угол поворота вокруг оси Z
@@ -43,26 +44,18 @@ class Scene3D : public QGLWidget // класс Scene3D наследует вст
       void drawFigure();     // построить фигуру
 
    protected:
-      // метод для проведения инициализаций, связанных с OpenGL
-      /*virtual*/ void initializeGL();
-      // метод вызывается при изменении размеров окна виджета
-      /*virtual*/ void resizeGL(int nWidth, int nHeight);
-      // метод, чтобы заново перерисовать содержимое виджета
-      /*virtual*/ void paintGL();
+      void initializeGL();
+      void resizeGL(int nWidth, int nHeight);
+      void paintGL();
 
-      // метод обработки события мыши при нажатии клавиши мыши
-      /*virtual*/ void mousePressEvent(QMouseEvent* pe);
-      // метод обработки события мыши при перемещении мыши
-      /*virtual*/ void mouseMoveEvent(QMouseEvent* pe);
-      // метод обработки событий мыши при отжатии клавиши мыши
-      /*virtual*/ void mouseReleaseEvent(QMouseEvent* pe);
-      // метод обработки событий колесика мыши
-      /*virtual*/ void wheelEvent(QWheelEvent* pe);
-      // методы обработки события при нажатии определенной клавиши
-      /*virtual*/ void keyPressEvent(QKeyEvent* pe);
+      void mousePressEvent(QMouseEvent* pe);
+      void mouseMoveEvent(QMouseEvent* pe);
+      void mouseReleaseEvent(QMouseEvent* pe);
+      void wheelEvent(QWheelEvent* pe);
+      void keyPressEvent(QKeyEvent* pe);
 
    public:
-      Scene3D(QWidget* parent = 0); // конструктор класса
+      Scene3D(QWidget* parent = 0);
    public slots:
       void set_figure(figure*);
 };
