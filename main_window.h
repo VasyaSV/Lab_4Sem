@@ -27,7 +27,7 @@ public:
     QTableView* table_view;
     TableDelegate *tdelegate;
     QATableFigure* model;
-    QDockWidget *dcw_table_view;
+    //QDockWidget *dcw_table_view;
     QDockWidget *dcw_3d_tool;
     QMenuBar *menu_bar;
     QFileDialog *file_dialog;

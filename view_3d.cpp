@@ -3,11 +3,13 @@
 // Двойная прорисовка (из нутри тоже)
 
 void Scene3D::set_figure(figure* f){
-    if (f->base_type != INCORECT //&& f->base_type != UNCONVEX
-            && (f->figure_type == PIRAMID || f->figure_type ==PRISME)
-            && f->hight && f->points_base.size() > 2)
+    if (f->get_base_type_to_QStr() != INCORECT
+            && f->get_base_type_to_QStr() != UNCONVEX
+            && (f->get_figure_type_to_QStr() == PIRAMID || f->get_figure_type_to_QStr() ==PRISME)
+            && f->get_hight_to_int() && f->get_base_size() > 2)
     cur_figure = f;
-    else return;
+    else
+        return;
     qglClearColor(back_grount_color);
     getVertexArray();
     getColorArray();
@@ -16,20 +18,22 @@ void Scene3D::set_figure(figure* f){
 }
 Scene3D::Scene3D(QWidget* parent) : QGLWidget(parent)
 {
+    tone = 10;
+    this->setParent(parent);
    this->setAcceptDrops(false);
    back_grount_color = Qt :: white;
    xRot=-90; yRot=0; zRot=0;
    zTra=0;
    nSca=1;
    cur_figure = new figure;
-   cur_figure->base_type=CONVEX;
-   cur_figure->figure_type=PIRAMID;
-   cur_figure->hight=2;
-   cur_figure->point_hight_A=point(0,0,0);
-   cur_figure->points_base.append(point(-4,0,0));
-   cur_figure->points_base.append(point(0,-4,0));
-   cur_figure->points_base.append(point(4,0,0));
-   cur_figure->points_base.append(point(0,4,0));
+   cur_figure->set_figure_type(CONVEX);
+   cur_figure->set_figure_type(PIRAMID);
+   cur_figure->set_hight(2);
+   cur_figure->set_point_hight(point(0,0,0));
+   cur_figure->add_point_base(point(-4,0,0));
+   cur_figure->add_point_base(point(0,-4,0));
+   cur_figure->add_point_base(point(4,0,0));
+   cur_figure->add_point_base(point(0,4,0));
 }
 void Scene3D::initializeGL()
 {
@@ -81,6 +85,12 @@ void Scene3D::paintGL()
    drawAxis();   // рисование осей координат
    drawFigure(); // нарисовать фигуру
 }
+
+void Scene3D::contextMenuEvent(QContextMenuEvent *ev)
+{
+
+}
+
 void Scene3D::mousePressEvent(QMouseEvent* pe) // нажатие клавиши мыши
 {
    ptrMousePosition = pe->pos();
@@ -206,20 +216,12 @@ void Scene3D::drawAxis() // построить оси координат
 
 void Scene3D::getVertexArray() // определить массив вершин
 {// вычисляем точки фигуры
-    // вычисляем точки основания
-    int i;
-    for (i=0; i<cur_figure->points_base.size();i++)
-    {
-        VertexArray[i][0]=cur_figure->points_base.at(i).k[0];   // x
-        VertexArray[i][1]=cur_figure->points_base.at(i).k[1];   // y
-        VertexArray[i][2]=cur_figure->points_base.at(i).k[2];   // z
-    }
     //вычисляем вектор высоты h
     float A, B, C; // добавить проверку на не колониарность трех точек
     int x1, y1, z1, x2, y2, z2, x3, y3, z3;
-    point p1=cur_figure->points_base.at(0);
-    point p2=cur_figure->points_base.at(1);
-    point p3=cur_figure->points_base.at(2);
+    point p1=cur_figure->get_point_base(0);
+    point p2=cur_figure->get_point_base(1);
+    point p3=cur_figure->get_point_base(2);
     x1=p1.k[0];
     y1=p1.k[1];
     z1=p1.k[2];
@@ -235,58 +237,104 @@ void Scene3D::getVertexArray() // определить массив вершин
     A/=qSqrt(A*A+B*B+C*C)+static_cast<int>(qSqrt(A*A+B*B+C*C)==0);
     B/=qSqrt(A*A+B*B+C*C)+static_cast<int>(qSqrt(A*A+B*B+C*C)==0);
     C/=qSqrt(A*A+B*B+C*C)+static_cast<int>(qSqrt(A*A+B*B+C*C)==0);
-    h.k[0]=A*static_cast<float>(cur_figure->hight);
-    h.k[1]=B*static_cast<float>(cur_figure->hight);
-    h.k[2]=C*static_cast<float>(cur_figure->hight);
-    if (cur_figure->figure_type==PIRAMID)
+    h.k[0]=A*static_cast<float>(cur_figure->get_hight_to_int());
+    h.k[1]=B*static_cast<float>(cur_figure->get_hight_to_int());
+    h.k[2]=C*static_cast<float>(cur_figure->get_hight_to_int());
+    // вычисляем точки основания
+    int i, n_points = cur_figure->get_base_size();// количество точек в основании
+    for (i=0; i<n_points;i++)
+    {
+        VertexArray[i][0]=cur_figure->get_point_base(i).k[0];   // x
+        VertexArray[i][1]=cur_figure->get_point_base(i).k[1];   // y
+        VertexArray[i][2]=cur_figure->get_point_base(i).k[2];   // z
+        // Для пирамиды сразу вычисляем точки второго основание
+        if (cur_figure->get_figure_type_to_QStr()==PRISME)
+        {
+            VertexArray[i+n_points][0]=cur_figure->get_point_base(i).k[0]+h.k[0];   // x
+            VertexArray[i+n_points][1]=cur_figure->get_point_base(i).k[1]+h.k[1];   // y
+            VertexArray[i+n_points][2]=cur_figure->get_point_base(i).k[2]+h.k[2];   // z
+        }
+    }
+    if (cur_figure->get_figure_type_to_QStr()==PIRAMID)
     {
         // Вычисляем вторую точку высоты
-        VertexArray[i][0]=cur_figure->point_hight_A.k[0]+h.k[0];   // x
-        VertexArray[i][1]=cur_figure->point_hight_A.k[1]+h.k[1];   // y
-        VertexArray[i][2]=cur_figure->point_hight_A.k[2]+h.k[2];   // z
+        VertexArray[i][0]=cur_figure->get_point_hight().k[0]+h.k[0];   // x
+        VertexArray[i][1]=cur_figure->get_point_hight().k[1]+h.k[1];   // y
+        VertexArray[i][2]=cur_figure->get_point_hight().k[2]+h.k[2];   // z
     }
-    else // пoка только пирамида
-        ;
-
 }
 
 void Scene3D::getColorArray() // определить массив цветов вершин
 {
-   for (int i=0; i < cur_figure->points_base.size()*6+6; i++)
+    int n_points;
+    if (cur_figure->get_figure_type_to_QStr()==PIRAMID)
+        n_points = cur_figure->get_base_size()*6+6;
+    else if (cur_figure->get_figure_type_to_QStr()==PRISME)
+        n_points = cur_figure->get_base_size()*12;
+   for (int i=0; i < n_points; i++)
    {
-      ColorArray[i][0]=0.1f*(qrand()%20); // R - красная составляющая
-      ColorArray[i][1]=0.1f*(qrand()%20); // G - зелёная составляющая
-      ColorArray[i][2]=0.1f*(qrand()%20); // B - синяя составляющая
+       ColorArray[i][0]=0.1f*(i%2+qrand()%tone); // R - красная составляющая
+       ColorArray[i][1]=0.1f*(i%2+qrand()%tone); // G - зелёная составляющая
+       ColorArray[i][2]=0.1f*(i%2+qrand()%tone); // B - синяя составляющая
    }
 }
 
 void Scene3D::getIndexArray()   // определить массив индексов
 {
     int i, j;
+    int n_points = cur_figure->get_base_size();
     // Основание
-    for (i=2, j=0; i<cur_figure->points_base.size(); i++, j++)
+    for (i=2, j=0; i<n_points; i++, j++)
     {
         IndexArray[j][0]=0; // индекс (номер) 1-ой вершины
         IndexArray[j][1]=i-1; // индекс (номер) 2-ой вершины
         IndexArray[j][2]=i; // индекс (номер) 3-ей вершины
     }
-
-
-    if (cur_figure->figure_type == PIRAMID)
-    {// Бока для пирамиды
-        for (i=1; i<cur_figure->points_base.size();i++, j++)
+    if (cur_figure->get_figure_type_to_QStr() == PRISME) // для призмы вычисляем второе основание
+        for (i=2+n_points; i< 2*n_points; i++, j++)
         {
-            IndexArray[j][0]=cur_figure->points_base.size(); // индекс (номер) 1-ой вершины
+            IndexArray[j][0]=n_points; // индекс (номер) 1-ой вершины
             IndexArray[j][1]=i-1; // индекс (номер) 2-ой вершины
             IndexArray[j][2]=i; // индекс (номер) 3-ей вершины
         }
-        IndexArray[j][0]=cur_figure->points_base.size(); // индекс второй точки высоты
+
+    if (cur_figure->get_figure_type_to_QStr() == PIRAMID)
+    {// Бока для пирамиды
+        for (i=1; i<n_points;i++, j++)
+        {
+            IndexArray[j][0]=n_points; // индекс (номер) 1-ой вершины
+            IndexArray[j][1]=i-1; // индекс (номер) 2-ой вершины
+            IndexArray[j][2]=i; // индекс (номер) 3-ей вершины
+        }
+        // замыкающая грань, последие точки с первыми
+        IndexArray[j][0]=n_points; // индекс второй точки высоты
         IndexArray[j][1]=i-1; // индекс (номер) 2-ой вершины
         IndexArray[j][2]=0; // индекс (номер) 3-ей вершины
         j++;
     }
-    else
-        ; // тут будет призмa
+    else if (cur_figure->get_figure_type_to_QStr() == PRISME)
+    {
+        for (i=1; i<n_points;i++, j++)
+        {// бок призмы состоит из двух триугольников
+            // парвый триугольник
+            IndexArray[j][0]=i-1; // индекс (номер) 1-ой вершины
+            IndexArray[j][1]=i+n_points-1; // индекс (номер) 2-ой вершины
+            IndexArray[j][2]=i+n_points; // индекс (номер) 3-ей вершины
+            j++; // второй
+            IndexArray[j][0]=i-1; // индекс (номер) 1-ой вершины
+            IndexArray[j][1]=i; // индекс (номер) 2-ой вершины
+            IndexArray[j][2]=i+n_points; // индекс (номер) 3-ей вершины
+        }
+        // замыкающая грань, последие точки с первыми
+        // парвый триугольник
+        IndexArray[j][0]=0; // индекс (номер) 1-ой вершины
+        IndexArray[j][1]=n_points; // индекс (номер) 2-ой вершины
+        IndexArray[j][2]=2*n_points-1; // индекс (номер) 3-ей вершины
+        j++; // второй
+        IndexArray[j][0]=0; // индекс (номер) 1-ой вершины
+        IndexArray[j][1]=n_points-1; // индекс (номер) 2-ой вершины
+        IndexArray[j][2]=2*n_points-1; // индекс (номер) 3-ей вершины
+    }
 }
 
 void Scene3D::drawFigure() // построить фигуру
@@ -296,8 +344,8 @@ void Scene3D::drawFigure() // построить фигуру
    // указываем, откуда нужно извлечь данные о массиве цветов вершин
    glColorPointer(3, GL_FLOAT, 0, ColorArray);
    // используя массивы вершин и индексов, строим поверхности
-   if (cur_figure->figure_type == PIRAMID)
-      glDrawElements(GL_TRIANGLES, (cur_figure->points_base.size()-1)*6, GL_UNSIGNED_BYTE, IndexArray);
-   else
-       ;
+   if (cur_figure->get_figure_type_to_QStr() == PIRAMID)
+      glDrawElements(GL_TRIANGLES, (cur_figure->get_base_size()-1)*6, GL_UNSIGNED_BYTE, IndexArray);
+   else if(cur_figure->get_figure_type_to_QStr() == PRISME)
+       glDrawElements(GL_TRIANGLES, (cur_figure->get_base_size()-1)*12, GL_UNSIGNED_BYTE, IndexArray);
 }

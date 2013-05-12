@@ -3,11 +3,11 @@
 main_window::main_window(QWidget *parent) :
     QMainWindow(parent)
 {
-    table_view = new QTableView;
+    table_view = new QTableView(parent);
     tdelegate = new TableDelegate;
     model = new QATableFigure;
-    scene3d = new Scene3D;
-    file_dialog = new QFileDialog;
+    scene3d = new Scene3D(parent);
+    file_dialog = new QFileDialog(parent);
     this->setDockOptions(QMainWindow::VerticalTabs);
     add_dock_widgets(parent);
     table_view->setItemDelegate(tdelegate);
@@ -16,7 +16,8 @@ main_window::main_window(QWidget *parent) :
     cultivate_conects();
     table_view->setAcceptDrops(false);
     this->setAcceptDrops(true);
-    scene3d->resize(300,300);
+    this->resize(950, 300);
+
 }
 
 void main_window::add_menu_bar(QWidget *parent){
@@ -30,6 +31,7 @@ void main_window::add_menu_bar(QWidget *parent){
     QAction *a_add_after;
     QAction *a_add_before;
     QAction *a_add_down;
+    QAction *sinchro;
     //QAction *down_row;
     //QAction *copy
     //QAction *paste
@@ -114,6 +116,18 @@ void main_window::add_menu_bar(QWidget *parent){
     memu_window->addAction(table);
     memu_window->addAction(window_3d);
 
+    //QMenu *sql = new QMenu;
+    //sql->setTitle("SQL");
+    //menu_bar->addMenu(sql);
+
+    //sinchro = new QAction(parent);
+    //sinchro->setShortcut(tr("Ctrl+R"));
+    //sinchro->setCheckable(true);
+    //sinchro->setText("Sinchronize with last open base (dafoult temp.sqlite)");
+    //QObject::connect(sinchro, SIGNAL(toggled(bool)), model, SLOT(sync(bool)));
+
+    //sql->addAction(sinchro);
+
     about = new QAction(parent);
     about->setText("About");
     menu_bar->addAction(about);
@@ -121,14 +135,19 @@ void main_window::add_menu_bar(QWidget *parent){
 }
 
 void main_window::add_dock_widgets(QWidget *parent){
-    dcw_table_view = new QDockWidget(parent);
-    dcw_table_view->layout()->addWidget(table_view);
-    this->addDockWidget(Qt::LeftDockWidgetArea, dcw_table_view);
+    this->setCentralWidget(table_view);
     dcw_3d_tool = new QDockWidget(parent);
     this->addDockWidget(Qt::RightDockWidgetArea, dcw_3d_tool);
+    dcw_3d_tool->setLayout(new QHBoxLayout(parent));
     dcw_3d_tool->layout()->addWidget(scene3d);
-    scene3d->showFullScreen();
-    scene3d->showMaximized();
+    scene3d->move(5, 22);
+    scene3d->resize(300, 200);
+    dcw_3d_tool->setFixedSize(300,300);
+
+   // QLabel *view_3d_name = new QLabel("3d view", parent);
+   // dcw_3d_tool->layout()->addWidget(view_3d_name);
+   // view_3d_name->move(5, 210);
+
 }
 
 void main_window::cultivate_conects(){
@@ -137,7 +156,6 @@ void main_window::cultivate_conects(){
     QObject::connect(this, SIGNAL(insertRow(int)), model, SLOT(insertRow(int)));
     QObject::connect(this, SIGNAL(fileSave(QString)), model, SLOT(write_base_in_file(QString)));
     QObject::connect(this, SIGNAL(fileOpen(QString)), model, SLOT(read_base_from_file(QString)));
-    QObject::connect(dcw_table_view, SIGNAL(visibilityChanged(bool)), this, SLOT(setVisible_table(bool)));
     QObject::connect(dcw_3d_tool, SIGNAL(visibilityChanged(bool)), this, SLOT(setVisible_3d(bool)));
     QObject::connect(this, SIGNAL(sql(bool)), model, SLOT(sql(bool)));
     QObject::connect(this, SIGNAL(recolculat_model()), model, SLOT(refreash()));
@@ -145,8 +163,7 @@ void main_window::cultivate_conects(){
                 SLOT(tableSelectionChanged()));
 }
 
-void main_window::tableSelectionChanged()
-{
+void main_window::tableSelectionChanged(){
     if (table_view->selectionModel()->selectedIndexes().count())
         scene3d->set_figure(model->list.at(
                                table_view->selectionModel()->selectedIndexes().at(0).row()));
@@ -200,7 +217,7 @@ void main_window::setVisible_3d(bool hf){
 }
 
 void main_window::setVisible_table(bool hf){
-    dcw_table_view->setVisible(hf);
+    table_view->setVisible(hf);
 }
 
 void main_window::keyPressEvent(QKeyEvent *ev){

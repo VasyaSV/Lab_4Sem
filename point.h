@@ -11,5 +11,4 @@ public:
     friend bool operator ==(point&, point&);
 };
 
-
 #endif // POINT_H
