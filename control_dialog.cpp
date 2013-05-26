@@ -20,13 +20,9 @@ QWidget *TableDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem
     }
     else if (index.column() == 2) // hight
     {
-        QRegExp rx;
-        rx.setPattern("[0-9]{1,6}");
-        QRegExpValidator *validator = new QRegExpValidator(rx);
-        QLineEdit *editor = new QLineEdit(parent);
-        editor->setValidator(validator);
-        QString currentText = index.model()->data(index, Qt::DisplayRole).toString();
-        editor->setText(currentText);
+        QSpinBox *editor = new QSpinBox(parent);
+        editor->setMinimum(0);
+        editor->setMaximum(1000);
         return editor;
     }
     else if (index.column() == 3) // hight possicion
@@ -63,6 +59,12 @@ void TableDelegate::setEditorData(QWidget *editor, const QModelIndex &index) con
         combo_editor->setEditText(index.model()->data(index, Qt::EditRole).toString());
         return;
    }
+   if (index.column()==2)
+   {
+        QSpinBox *spin_editor = qobject_cast<QSpinBox *>(editor);
+        spin_editor->setValue(index.model()->data(index, Qt::EditRole).toInt());
+        return;
+   }
    if (index.column()==1 || index.column()==5)
    {
         QLabel *lable_editor = qobject_cast<QLabel *>(editor);
@@ -82,6 +84,12 @@ void TableDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, con
     {
         QComboBox *combo_editor = qobject_cast<QComboBox *>(editor);
         model->setData(index, combo_editor->currentText());
+        return;
+    }
+    if (index.column()==2)
+    {
+        QSpinBox *combo_editor = qobject_cast<QSpinBox *>(editor);
+        model->setData(index, combo_editor->value());
         return;
     }
 

@@ -1,6 +1,5 @@
 
 #include "view_3d.h"
-// Двойная прорисовка (из нутри тоже)
 
 void Scene3D::set_figure(figure* f){
     if (f->get_base_type_to_QStr() != INCORECT
@@ -18,8 +17,8 @@ void Scene3D::set_figure(figure* f){
 }
 Scene3D::Scene3D(QWidget* parent) : QGLWidget(parent)
 {
-    tone = 10;
-    this->setParent(parent);
+   tone = 10;
+   this->setParent(parent);
    this->setAcceptDrops(false);
    back_grount_color = Qt :: white;
    xRot=-90; yRot=0; zRot=0;
@@ -75,9 +74,8 @@ void Scene3D::paintGL()
    glMatrixMode(GL_MODELVIEW);
   // загружаем единичную матрицу моделирования
    glLoadIdentity();
-   // последовательные преобразования
-   glScalef(nSca, nSca, nSca);        // масштабирование
-   glTranslatef(0.0f, zTra, 0.0f);    // трансляция
+   glScalef(nSca, nSca, nSca);
+   glTranslatef(0.0f, zTra, 0.0f);
    glRotatef(xRot, 1.0f, 0.0f, 0.0f); // поворот вокруг оси X
    glRotatef(yRot, 0.0f, 1.0f, 0.0f); // поворот вокруг оси Y
    glRotatef(zRot, 0.0f, 0.0f, 1.0f); // поворот вокруг оси Z
@@ -88,7 +86,7 @@ void Scene3D::paintGL()
 
 void Scene3D::contextMenuEvent(QContextMenuEvent *ev)
 {
-
+    //this->setc
 }
 
 void Scene3D::mousePressEvent(QMouseEvent* pe) // нажатие клавиши мыши
@@ -99,6 +97,7 @@ void Scene3D::mouseReleaseEvent(QMouseEvent* pe) // отжатие клавиш�
 {
    //при отжатии клавиши мыши..
 }
+
 void Scene3D::mouseMoveEvent(QMouseEvent* pe)
 {
    // вычисление углов поворота
@@ -107,6 +106,7 @@ void Scene3D::mouseMoveEvent(QMouseEvent* pe)
    ptrMousePosition = pe->pos();
    updateGL();
 }
+
 void Scene3D::wheelEvent(QWheelEvent* pe)
 {
    if ((pe->delta())>0)
@@ -152,42 +152,52 @@ void Scene3D::keyPressEvent(QKeyEvent* pe)
    }
    updateGL();
 }
+
 void Scene3D::scale_plus() // приблизить сцену
 {
    nSca = nSca*1.1;
 }
+
 void Scene3D::scale_minus() // удалиться от сцены
 {
    nSca = nSca/1.1;
 }
+
 void Scene3D::rotate_up() // повернуть сцену вверх
 {
    xRot += 1.0;
 }
+
 void Scene3D::rotate_down() // повернуть сцену вниз
 {
    xRot -= 1.0;
 }
+
 void Scene3D::rotate_left() // повернуть сцену влево
 {
    zRot += 1.0;
 }
+
 void Scene3D::rotate_right() // повернуть сцену вправо
 {
    zRot -= 1.0;
 }
+
 void Scene3D::translate_down() // транслировать сцену вниз
 {
    zTra -= 0.05;
 }
+
 void Scene3D::translate_up() // транслировать сцену вверх
 {
    zTra += 0.05;
 }
+
 void Scene3D::defaultScene() // наблюдение сцены по умолчанию
 {
    xRot=-90; yRot=0; zRot=0; zTra=0; nSca=1;
 }
+
 void Scene3D::drawAxis() // построить оси координат
 {
    // устанавливаем ширину линии

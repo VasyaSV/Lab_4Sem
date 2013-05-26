@@ -7,6 +7,17 @@ figure::figure()
     point_hight_A.k[0]=point_hight_A.k[1]=point_hight_A.k[2]=0;
     figure_type=
     base_type=defoult;
+    calc_base_type();
+    calc_sites();
+}
+
+figure::figure(QString figure_type, int hight, QString point_hight, QString base_point){
+    set_figure_type(figure_type);
+    set_hight(hight);
+    set_point_hight(point_hight);
+    set_point_base(base_point);
+    calc_base_type();
+    calc_sites();
 }
 
 bool figure::point_in_one_plane(){ // Function work in 3D only, for more need giperkomplane
@@ -247,7 +258,7 @@ QString figure::get_base_type_to_QStr() const{
     return base_type;
 }
 QString figure::get_hight_to_QStr() const{
-    return QString(hight);
+    return QString().setNum(hight);
 }
 
 point figure::get_point_base(int i) const{

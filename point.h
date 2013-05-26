@@ -7,8 +7,9 @@ public:
     float k[demention];
     point();
     point(const point& p);
-    point(const int x, const int y, const int z);
+    point(const float x, const float y, const float z);
     friend bool operator ==(point&, point&);
+    point operator -(point);
 };
 
 #endif // POINT_H

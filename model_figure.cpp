@@ -7,6 +7,7 @@ QATableFigure::QATableFigure()
                 << QString("Base points") << QString("Long base sites");
     for(int i = 0; i < start_size_table; i++)
         list.append(new figure);
+    sql.clear_base();
 }
 
 QVariant QATableFigure::data(const QModelIndex &index, int role) const
@@ -40,6 +41,7 @@ bool QATableFigure::setData(const QModelIndex &index, const QVariant &value, int
             list.append(new figure);
             endInsertRows();
         }
+        figure old = *(list.at(index.row()));
         // read value to everyone column
         if (index.column() == 0)
             list.at(index.row())->set_figure_type(value.toString());
@@ -49,7 +51,7 @@ bool QATableFigure::setData(const QModelIndex &index, const QVariant &value, int
             list.at(index.row())->set_point_hight(value.toString());
         if (index.column() == 4)
             list.at(index.row())->set_point_base(value.toString());
-        //refreash(index);
+        sql.change(&old, list.at(index.row()));
         return true;
     }
     return false;
@@ -79,18 +81,51 @@ Qt::ItemFlags QATableFigure::flags(const QModelIndex &index) const
    return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
 }
 
+void QATableFigure::read_from_sql(QString name_file, QString name_base){
+
+    qDebug("=)");
+    sql.open_base(name_file, name_base);
+    figure *f;
+    //sql.print();
+    if (!(f = sql.first()))
+        return;
+    do{
+        beginInsertRows(QModelIndex(), list.size(), list.size());
+        list.append(f);
+        endInsertRows();
+    }
+    while (f = sql.next());
+}
+
+void QATableFigure::write_in_sql(QString name_file, QString name_base){
+    QList <figure*>::iterator i;
+    sql.open_base(name_file, name_base);
+    sql.clear_base();
+    for (i = list.begin(); i!=list.end(); ++i)
+        sql.add_figure(*i);
+}
+
 void QATableFigure::read_base_from_file(QString name){
     QFile file(name);
     char str[500];
     figure *tmp;
     file.open(QIODevice::ReadOnly | QIODevice::Text);
     QTextStream in(&file);
+    //sql.clear_base();
     while(!in.atEnd())
     {
         tmp=new figure();
         str[0]=0;
-
         in >> str;
+        if (QString(str) == QString("SQLite"))
+        {
+            Name_dialog *d_name = new Name_dialog(QString("It's sql base, please enter name base"),
+                                                  QString("File name"), QString("Base name"),
+                                                  name);
+            QObject::connect(d_name, SIGNAL(name(QString,QString)), this, SLOT(read_from_sql(QString,QString)));
+            break;
+        }
+        //sql.open_base("temp", "figure");
         if (in.atEnd()) break;
         str[strlen(str)-1]=0;
         tmp->set_figure_type(str);
@@ -113,12 +148,22 @@ void QATableFigure::read_base_from_file(QString name){
         beginInsertRows(QModelIndex(), list.size(), list.size());
         list.append(tmp);
         endInsertRows();
+
+        //sql.add_figure(tmp);
     }
 
     delete tmp;
     file.close();
 }
 void QATableFigure::write_base_in_file(QString name){
+    if (name.lastIndexOf(QString(".SQLite")) != -1)
+    {
+        Name_dialog *d_name = new Name_dialog(QString("Please enter name base for save"),
+                                              QString("File name"), QString("Base name"),
+                                              name);
+        QObject::connect(d_name, SIGNAL(name(QString,QString)), this, SLOT(write_in_sql(QString,QString)));
+        return;
+    }
     QFile file(name);
     file.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream out(&file);
@@ -136,10 +181,14 @@ void QATableFigure::write_base_in_file(QString name){
 void QATableFigure::removeRow(int row, int num){
     if (list.size() < 1 || num < 1)
         return ;
-    beginRemoveRows(QModelIndex(), row, row+num-1);
     for (int i=0; i<num; i++)
+    {
+        sql.delete_figure(list.at(row));
+        beginRemoveRows(QModelIndex(), row, row+num-1);
         list.removeAt(row);
-    endRemoveRows();
+        endRemoveRows();
+    }
+
 }
 void QATableFigure::insertRow(int row){
     beginInsertRows(QModelIndex(), row, row);
@@ -148,6 +197,7 @@ void QATableFigure::insertRow(int row){
 }
 
 void QATableFigure::clear_cell(int row, int column){
+    figure old = *(list.at(row));
     switch (column)
     {
     case 2:
@@ -160,4 +210,5 @@ void QATableFigure::clear_cell(int row, int column){
         this->list.at(row)->set_point_base(point());
         break;
     }
+    sql.change(&old, list.at(row));
 }

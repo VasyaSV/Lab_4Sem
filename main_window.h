@@ -16,6 +16,7 @@
 #include "model_figure.h"
 #include "control_dialog.h"
 #include "view_3d.h"
+#include "projection_view.h"
 #include "Constants.h"
 
 using namespace std;
@@ -23,28 +24,30 @@ using namespace std;
 class main_window : public QMainWindow
 {
     Q_OBJECT
-public:
     QTableView* table_view;
     TableDelegate *tdelegate;
     QATableFigure* model;
     //QDockWidget *dcw_table_view;
     QDockWidget *dcw_3d_tool;
+    QDockWidget *dcw_2d_tool;
     QMenuBar *menu_bar;
     QFileDialog *file_dialog;
     Scene3D *scene3d; // создаём виджет класса Scene3D
+    projection_view *projection;
 
     void add_menu_bar(QWidget *parent);
     void add_dock_widgets(QWidget *parent);
     void cultivate_conects();
 
-    main_window(QWidget *parent = 0);
     bool del_cliced(QEvent*);
     void keyPressEvent(QKeyEvent *ev);
     void dragEnterEvent(QDragEnterEvent *ev);
     //void dragMoveEvent(QDragMoveEvent *ev);
     void dropEvent(QDropEvent *ev);
+public:
+    main_window(QWidget *parent = 0);
 signals:
-    void sql(bool);
+    void sql_close();
     void recolculat_model();
     void clear_cell(int row, int column);
     void removeRow(int row, int num);

@@ -16,8 +16,7 @@ main_window::main_window(QWidget *parent) :
     cultivate_conects();
     table_view->setAcceptDrops(false);
     this->setAcceptDrops(true);
-    this->resize(950, 300);
-
+    this->resize(950, 444);
 }
 
 void main_window::add_menu_bar(QWidget *parent){
@@ -116,18 +115,6 @@ void main_window::add_menu_bar(QWidget *parent){
     memu_window->addAction(table);
     memu_window->addAction(window_3d);
 
-    //QMenu *sql = new QMenu;
-    //sql->setTitle("SQL");
-    //menu_bar->addMenu(sql);
-
-    //sinchro = new QAction(parent);
-    //sinchro->setShortcut(tr("Ctrl+R"));
-    //sinchro->setCheckable(true);
-    //sinchro->setText("Sinchronize with last open base (dafoult temp.sqlite)");
-    //QObject::connect(sinchro, SIGNAL(toggled(bool)), model, SLOT(sync(bool)));
-
-    //sql->addAction(sinchro);
-
     about = new QAction(parent);
     about->setText("About");
     menu_bar->addAction(about);
@@ -141,8 +128,18 @@ void main_window::add_dock_widgets(QWidget *parent){
     dcw_3d_tool->setLayout(new QHBoxLayout(parent));
     dcw_3d_tool->layout()->addWidget(scene3d);
     scene3d->move(5, 22);
-    scene3d->resize(300, 200);
-    dcw_3d_tool->setFixedSize(300,300);
+    scene3d->setFixedSize(300, 200);
+    dcw_3d_tool->setFixedSize(305, 222);
+
+    dcw_2d_tool = new QDockWidget(parent);
+    projection = new projection_view(parent);
+    dcw_2d_tool->setFixedSize(300,200);
+    this->addDockWidget(Qt::RightDockWidgetArea, dcw_2d_tool);
+    dcw_2d_tool->setLayout(new QHBoxLayout(parent));
+    dcw_2d_tool->layout()->addWidget(projection);
+    projection->move(5, 22);
+    projection->setFixedSize(300, 200);
+    dcw_2d_tool->setFixedSize(305, 222);
 
    // QLabel *view_3d_name = new QLabel("3d view", parent);
    // dcw_3d_tool->layout()->addWidget(view_3d_name);
@@ -165,47 +162,69 @@ void main_window::cultivate_conects(){
 
 void main_window::tableSelectionChanged(){
     if (table_view->selectionModel()->selectedIndexes().count())
+    {
         scene3d->set_figure(model->list.at(
                                table_view->selectionModel()->selectedIndexes().at(0).row()));
+        projection->set_cur_figure(model->list.at(
+                               table_view->selectionModel()->selectedIndexes().at(0).row()));
+
+    }
 }
 
 void main_window::about_clicked(){
-   qDebug("WHOT ABOUT!???");
+    QMessageBox::about(this, "About", "<img src = about.jpg>");
 }
 
 void main_window::add_after(){
     if (table_view->selectionModel()->selectedIndexes().count())
         model->insertRow(table_view->selectionModel()->selectedIndexes().at(0).row()+1);
+    else
+        model->insertRow(0);
 }
 
 void main_window::add_before(){
     if (table_view->selectionModel()->selectedIndexes().count())
         model->insertRow(table_view->selectionModel()->selectedIndexes().at(0).row());
+    else
+        model->insertRow(0);
 }
 
 void main_window::add_end(){
     if (table_view->selectionModel()->selectedIndexes().count())
         model->insertRow(table_view->model()->rowCount());
+    else
+        model->insertRow(0);
 }
 
 void main_window::fileNew_clicked(){
     int n_rows = table_view->model()->rowCount();
     if (n_rows) // delete all raws
         emit removeRow(table_view->rowAt(0), n_rows);
+    model->sql.close();
     emit insertRow(0);
     for (int i=0; i<5 ; i++)
         emit clear_cell(0,i);
 }
 
 void main_window::fileSave_clicked(){
-    emit fileSave(file_dialog->getSaveFileName());
+    model->sql.close();
+    emit fileSave(file_dialog->getSaveFileName(this, tr("Save files"), QString(),
+                                               tr( "Figure file(*.fgr);;"
+                                                 "Sql data base(*.SQLite);;"
+                                                 "Text file(*.txt);;"
+                                                 "All files(*.*)")));
 }
 void main_window::fileOpen_clicked(){
     table_view->clearSelection();
-    QString name = file_dialog->getOpenFileName();
+    QString name = file_dialog->getOpenFileName(this, tr("Open files"), QString(),
+                                                 tr( "Figure file(*.fgr);;"
+                                                   "Sql data base(*.SQLite);;"
+                                                   "Text file(*.txt);;"
+                                                   "All files(*.*)"));
     if (name.isEmpty())
         return;
     int n = table_view->model()->rowCount();
+    model->sql.close();
     if (n) // delete all raws
         emit removeRow(table_view->rowAt(0), n);
     emit fileOpen(name);
@@ -228,12 +247,12 @@ void main_window::keyPressEvent(QKeyEvent *ev){
         if (!table_view->selectionModel()->selectedRows().isEmpty())
             first_select = table_view->selectionModel()->selectedRows().at(0).row();
         int n_rows = table_view->model()->rowCount();
-        for( int i = 0; i < n_select; i++)
-            emit clear_cell(table_view->selectionModel()->selectedIndexes().at(i).row(),
-                            table_view->selectionModel()->selectedIndexes().at(i).column());
-
         int count_select = table_view->selectionModel()->selectedRows().count();
-        if (count_select)
+        if (!count_select)
+            for( int i = 0; i < n_select; i++)
+                emit clear_cell(table_view->selectionModel()->selectedIndexes().at(i).row(),
+                        table_view->selectionModel()->selectedIndexes().at(i).column());
+        else
             if (first_select || n_rows > count_select)
                 emit removeRow(first_select, count_select);
             else if (n_rows > 1)
@@ -267,13 +286,6 @@ void main_window::dragEnterEvent(QDragEnterEvent *ev){
    if (ev->mimeData()->hasFormat("text/uri-list"))
        ev->acceptProposedAction();
 }
-
-
-
-
-
-
-
 
 
 

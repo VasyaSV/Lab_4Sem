@@ -10,6 +10,7 @@
 #include <QLineEdit>
 #include <QComboBox>
 #include <QLabel>
+#include <QSpinBox>
 #include "Constants.h"
 
 using namespace std;
