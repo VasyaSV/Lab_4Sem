@@ -8,7 +8,6 @@
 #include "point2d.h"
 
 class projection2d{
-    QList <point2d> l2d;
     point d_vect;
    // point
     point b1, b2; // bazis 1 - условно x, 2 - условно y, 3
@@ -25,6 +24,7 @@ class projection2d{
     // прямой = 0
     int ungl_sign(point p1, point p2);
 public:
+    QList <point2d> l2d;
     projection2d(const QList <point> l3d, char fO); // fO - 1 is Oxy, 2 is Oyz, 3 is Oxz projection
     projection2d();
     //projection2d(char fO, figure* fgr);
@@ -38,6 +38,7 @@ public:
     point2d get_proj_point(point, int fO);
     void set_new(QList<point> l3d, char fO);
     float S(point l1, point l2, point p); // растояние от прямой l до точки p
+
 };
 
 #endif // PROJECTION2D_H

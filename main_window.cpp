@@ -158,6 +158,7 @@ void main_window::cultivate_conects(){
     QObject::connect(this, SIGNAL(recolculat_model()), model, SLOT(refreash()));
     QObject::connect(table_view->selectionModel(),SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
                 SLOT(tableSelectionChanged()));
+    QObject::connect(projection, SIGNAL(refreash(figure*)), scene3d, SLOT(set_figure(figure*)));
 }
 
 void main_window::tableSelectionChanged(){

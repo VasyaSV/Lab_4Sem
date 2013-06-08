@@ -270,3 +270,25 @@ point figure::get_point_hight() const{
 int figure::get_base_size() const{
     return points_base.size();
 }
+
+float figure::S(point p1, point p2){
+    return sqrt(abs(p1.k[0]-p2.k[0])*abs(p1.k[0]-p2.k[0]) +
+                abs(p1.k[1]-p2.k[1])*abs(p1.k[1]-p2.k[1]) +
+                abs(p1.k[2]-p2.k[2])*abs(p1.k[2]-p2.k[2])
+            );
+}
+
+int figure::get_n_point(point p, float ep){
+    if (S(p, this->point_hight_A) < ep)
+        return -1;
+    for (int i=0; i<this->get_base_size(); i++)
+        if (S(points_base.at(i), p) < ep)
+            return i;
+    return -2;
+}
+
+void figure::change_point_base(point old_p, point new_p, float epsilon){
+    for (int i=0; i<points_base.size(); i++)
+        if (S(points_base.at(i), old_p) <= epsilon)
+            points_base[i]=new_p;
+}

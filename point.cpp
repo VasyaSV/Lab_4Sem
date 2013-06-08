@@ -23,3 +23,7 @@ bool operator ==(point &p1, point &p2){
 point point::operator -(point p){
     return point(this->k[0]-(float)p.k[0], this->k[1]-(float)p.k[1], this->k[2]-(float)p.k[2]);
 }
+
+point point::round(){
+    return point((int)this->k[0], (int)this->k[1], (int)this->k[2]);
+}

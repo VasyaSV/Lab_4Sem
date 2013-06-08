@@ -10,6 +10,7 @@ public:
     point(const float x, const float y, const float z);
     friend bool operator ==(point&, point&);
     point operator -(point);
+    point round();
 };
 
 #endif // POINT_H

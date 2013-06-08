@@ -12,6 +12,7 @@
 #include <QComboBox>
 #include <QMouseEvent>
 #include <QLabel>
+#include <QTimer>
 #include "figure.h"
 #include "projection2d.h"
 
@@ -27,6 +28,10 @@ class projection_view : public QDockWidget
    // QPoint ptr_mouse_pos; // координата указателя мыши
     QLabel *pos_x_y_z;
     int proj_type;
+    int changing_point;
+    point2d h; // hight
+    //bool f_change;
+    QTimer t;
 public:
     projection_view(QWidget *parent=0);
     void paintEvent(QPaintEvent *event);
@@ -37,6 +42,8 @@ public slots:
     void set_cur_figure(figure*);
 private slots:
     void proj_calc(int);
+signals:
+    void refreash(figure*);
 };
 
 #endif // PROJECTION_VIEW_H

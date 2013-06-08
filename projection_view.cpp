@@ -39,17 +39,32 @@ projection_view::projection_view(QWidget *parent)
     //project_on->hide();
     //pos_x_y_z->move(10,15);
     proj_type = 0;
+    changing_point = -2;
     QObject::connect(project_on, SIGNAL(currentIndexChanged(int)), this, SLOT(proj_calc(int)));
-
+    t.start(20);
+    QObject::connect(&t, SIGNAL(timeout()), this->graphicsView, SLOT(repaint()));
 }
 
 void projection_view::proj_calc(int n){
     proj_type = n;
     cur_projection.set_new(cur_figure->points_base, proj_type);
+    h = cur_projection.get_proj_point(cur_figure->get_point_hight(), proj_type);
 }
 
 void projection_view::paintEvent(QPaintEvent *event)
 {
+    if (changing_point == -1)
+    {
+        QPointF pos = graphicsView->mapToScene(graphicsView->mapFromGlobal(QCursor::pos()));
+        h.x = pos.x();
+        h.y = pos.y();
+    }
+    else if (changing_point >= 0)
+    {
+        QPointF pos = graphicsView->mapToScene(graphicsView->mapFromGlobal(QCursor::pos()));
+        this->cur_projection.l2d[changing_point] = point2d(pos.x(), pos.y());
+    }
+
     if (!cur_projection.get_num_points())
         return;
     graphicsScene->clear();
@@ -73,13 +88,14 @@ void projection_view::paintEvent(QPaintEvent *event)
                                   cur_projection.get_point(0).x, cur_projection.get_point(0).y), QPen(Qt::blue));
     graphicsScene->addLine(QLineF(cur_projection.get_point(0).x, cur_projection.get_point(0).y
                                  ,cur_projection.get_point(0).x+0.01, cur_projection.get_point(0).y-0.01), QPen(Qt::black, 0.5));
-    point2d h; // hight
-    h = cur_projection.get_proj_point(cur_figure->get_point_hight(), proj_type);
+
+
     graphicsScene->addLine(QLineF(h.x, h.y, h.x+0.01, h.y-0.01), QPen(Qt::red, 0.5));
 }
 
 void projection_view::set_cur_figure(figure* fgr){
     cur_figure = fgr;
+    emit refreash(fgr);
     proj_calc(project_on->currentIndex());
     update();
 }
@@ -93,6 +109,24 @@ void projection_view::mousePressEvent(QMouseEvent* pe) // нажатие кла�
     qDebug(("x=" + QString().setNum(realpos.k[0])+" "
            +"y=" + QString().setNum(realpos.k[1])+" "
            +"z=" + QString().setNum(realpos.k[2])+";").toAscii());
+
+    if (changing_point == -2)
+        changing_point = cur_figure->get_n_point(realpos, EPSILON);
+    else if (changing_point > -2)
+        if (changing_point == -1)
+        {
+           cur_figure->set_point_hight(cur_projection.get_real_pos(h).round());
+           changing_point = -2;
+           set_cur_figure(cur_figure);
+        }
+        else
+        {
+            cur_figure->change_point_base(cur_figure->get_point_base(changing_point),
+                                          realpos.round());
+            changing_point = -2;
+            set_cur_figure(cur_figure);
+        }
+    this->graphicsView->repaint();
 }
 
 void projection_view::mouseReleaseEvent(QMouseEvent* pe) // отжатие клавиши мыши
@@ -105,6 +139,8 @@ void projection_view::mouseMoveEvent(QMouseEvent* pe)
 {
    // вычисление x y z позиции и вектора здвига
     //pos_x_y_z->setText("hello i'm hir");
+
+
 
    //ptrMousePosition = pe->pos();
    //update();
